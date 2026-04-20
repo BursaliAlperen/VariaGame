@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: varia-game
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: APP_URL
+        value: https://varia-game.onrender.com
