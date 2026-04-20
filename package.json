@@ -1,19 +1,16 @@
 {
   "name": "varia-game",
-  "version": "3.0.0",
-  "description": "VARİA GAME - Telegram Mini App Oyun Merkezi",
-  "main": "api/telegram.js",
+  "version": "3.1.0",
+  "description": "VARİA GAME - Telegram Mini App",
+  "type": "module",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel deploy --prod"
   },
-  "dependencies": {
-    "node-fetch": "^2.7.0"
+  "engines": {
+    "node": ">=18.0.0"
   },
   "devDependencies": {
     "vercel": "^32.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
