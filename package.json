@@ -1,7 +1,7 @@
 {
   "name": "varia-game",
-  "version": "1.0.0",
-  "description": "VARİA GAME - Telegram Mini App Oyun Merkezi",
+  "version": "2.0.0",
+  "description": "VARİA GAME - No-Scroll Telegram Mini App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
