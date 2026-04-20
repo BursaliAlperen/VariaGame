@@ -1,19 +1,17 @@
 {
   "name": "varia-game",
-  "version": "2.0.0",
-  "description": "VARİA GAME - No-Scroll Telegram Mini App",
-  "main": "server.js",
+  "version": "3.0.0",
+  "description": "VARİA GAME - Telegram Mini App Oyun Merkezi",
+  "main": "api/telegram.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "vercel dev",
+    "deploy": "vercel deploy --prod"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5",
-    "express-session": "^1.17.3",
-    "node-fetch": "^2.7.0",
-    "uuid": "^9.0.1"
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
