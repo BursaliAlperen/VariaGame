@@ -1,247 +1,595 @@
-const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
-
-let userData = {
-    balance: 5.00, streak: 2, dailyClaimed: false,
-    totalEarned: 5.00, gamesPlayed: 0, totalMinutes: 0,
-    xp: 45, level: 1, xpToNextLevel: 100,
-    referrals: 3, settings: { notifications: true, sound: true, vibration: true, autoPlay: true }
-};
-
-let onboardingData = { age: null, genres: [], frequency: null };
-let recommendedGame = { id: 'moto-x3m', name: 'Moto X3M' };
-let gameStartTime = null, earningInterval = null, weeklyChart, monthlyChart;
-let currentTab = 'Tümü';
-
-const oyunlar = [
-    { ad: "Moto X3M", kategori: "Yarış", ikon: "fa-motorcycle", puan: 4.8, oynanma: "2.3M", embed: "moto-x3m" },
-    { ad: "Stickman", kategori: "Aksiyon", ikon: "fa-user-ninja", puan: 4.7, oynanma: "1.8M", embed: "stickman" },
-    { ad: "Cut Rope", kategori: "Bulmaca", ikon: "fa-candy-cane", puan: 4.9, oynanma: "3.1M", embed: "cut-rope" },
-    { ad: "Archery", kategori: "Aksiyon", ikon: "fa-bow-arrow", puan: 4.6, oynanma: "1.2M", embed: "archery" },
-    { ad: "Temple Run", kategori: "Koşu", ikon: "fa-person-running", puan: 4.8, oynanma: "5.2M", embed: "temple-run" },
-    { ad: "Zuma", kategori: "Bulmaca", ikon: "fa-frog", puan: 4.7, oynanma: "2.7M", embed: "zuma" },
-    { ad: "Soccer", kategori: "Spor", ikon: "fa-futbol", puan: 4.6, oynanma: "1.5M", embed: "soccer" },
-    { ad: "2048", kategori: "Zeka", ikon: "fa-brain", puan: 4.9, oynanma: "4.1M", embed: "2048" }
+// ==================== OYUN VERİLERİ (SADECE DİK MOD OYUNLAR - GERÇEK İKONLAR) ====================
+const GAMES = [
+    { id: 1, name: "2048", category: "bulmaca", icon: "fa-th", iconColor: "#FF9F0A", embed: "https://www.crazygames.com/embed/2048", rating: 4.8, plays: "2.3M", orientation: "portrait" },
+    { id: 2, name: "Sudoku", category: "bulmaca", icon: "fa-puzzle-piece", iconColor: "#5856D6", embed: "https://www.crazygames.com/embed/sudoku", rating: 4.7, plays: "1.8M", orientation: "portrait" },
+    { id: 3, name: "Solitaire", category: "kart", icon: "fa-club", iconColor: "#34C759", embed: "https://www.crazygames.com/embed/solitaire", rating: 4.6, plays: "3.2M", orientation: "portrait" },
+    { id: 4, name: "Mahjong Connect", category: "bulmaca", icon: "fa-border-all", iconColor: "#AF52DE", embed: "https://www.crazygames.com/embed/mahjong-connect", rating: 4.5, plays: "1.2M", orientation: "portrait" },
+    { id: 5, name: "Word Search", category: "kelime", icon: "fa-search", iconColor: "#007AFF", embed: "https://www.crazygames.com/embed/word-search", rating: 4.4, plays: "987K", orientation: "portrait" },
+    { id: 6, name: "Bubble Shooter", category: "bulmaca", icon: "fa-circle", iconColor: "#FF3B30", embed: "https://www.crazygames.com/embed/bubble-shooter", rating: 4.6, plays: "5.1M", orientation: "portrait" },
+    { id: 7, name: "Tower Defense", category: "strateji", icon: "fa-castle", iconColor: "#FF9500", embed: "https://www.crazygames.com/embed/tower-defense", rating: 4.5, plays: "2.5M", orientation: "portrait" },
+    { id: 8, name: "Sniper Shot", category: "aksiyon", icon: "fa-crosshairs", iconColor: "#FF2D55", embed: "https://www.crazygames.com/embed/sniper-shot", rating: 4.3, plays: "1.5M", orientation: "portrait" },
+    { id: 9, name: "Penalty Kick", category: "spor", icon: "fa-futbol", iconColor: "#4CD964", embed: "https://www.crazygames.com/embed/penalty-kick", rating: 4.4, plays: "3.8M", orientation: "portrait" },
+    { id: 10, name: "Parking Master", category: "yaris", icon: "fa-car", iconColor: "#5E5CE6", embed: "https://www.crazygames.com/embed/parking-master", rating: 4.2, plays: "2.1M", orientation: "portrait" },
+    { id: 11, name: "Fruit Ninja", category: "aksiyon", icon: "fa-apple-alt", iconColor: "#FF3B30", embed: "https://www.crazygames.com/embed/fruit-ninja", rating: 4.7, plays: "8.2M", orientation: "portrait" },
+    { id: 12, name: "Temple Run", category: "aksiyon", icon: "fa-running", iconColor: "#FF9500", embed: "https://www.crazygames.com/embed/temple-run", rating: 4.6, plays: "12.5M", orientation: "portrait" },
+    { id: 13, name: "Subway Surfers", category: "aksiyon", icon: "fa-subway", iconColor: "#34C759", embed: "https://www.crazygames.com/embed/subway-surfers", rating: 4.8, plays: "15.2M", orientation: "portrait" },
+    { id: 14, name: "Helix Jump", category: "aksiyon", icon: "fa-chart-line", iconColor: "#5856D6", embed: "https://www.crazygames.com/embed/helix-jump", rating: 4.4, plays: "6.7M", orientation: "portrait" },
+    { id: 15, name: "Water Sort Puzzle", category: "bulmaca", icon: "fa-tint", iconColor: "#007AFF", embed: "https://www.crazygames.com/embed/water-sort-puzzle", rating: 4.5, plays: "3.4M", orientation: "portrait" },
+    { id: 16, name: "Paper.io 2", category: "strateji", icon: "fa-file", iconColor: "#AF52DE", embed: "https://www.crazygames.com/embed/paper-io-2", rating: 4.3, plays: "4.2M", orientation: "portrait" },
+    { id: 17, name: "Cut the Rope", category: "bulmaca", icon: "fa-cut", iconColor: "#FF9F0A", embed: "https://www.crazygames.com/embed/cut-the-rope", rating: 4.7, plays: "9.8M", orientation: "portrait" },
+    { id: 18, name: "Stack Balls", category: "aksiyon", icon: "fa-layer-group", iconColor: "#FF2D55", embed: "https://www.crazygames.com/embed/stack-balls", rating: 4.2, plays: "1.9M", orientation: "portrait" },
+    { id: 19, name: "Idle Miner", category: "strateji", icon: "fa-hammer", iconColor: "#FF9500", embed: "https://www.crazygames.com/embed/idle-miner-tycoon", rating: 4.3, plays: "2.8M", orientation: "portrait" },
+    { id: 20, name: "Crossword", category: "kelime", icon: "fa-pen", iconColor: "#5856D6", embed: "https://www.crazygames.com/embed/crossword", rating: 4.4, plays: "876K", orientation: "portrait" },
+    { id: 21, name: "Nonogram", category: "bulmaca", icon: "fa-th-large", iconColor: "#34C759", embed: "https://www.crazygames.com/embed/nonogram", rating: 4.5, plays: "654K", orientation: "portrait" },
+    { id: 22, name: "Merge Dragons", category: "strateji", icon: "fa-dragon", iconColor: "#AF52DE", embed: "https://www.crazygames.com/embed/merge-dragons", rating: 4.6, plays: "5.4M", orientation: "portrait" }
 ];
 
-// Onboarding
-function nextOnboardingStep(step) {
-    const current = document.querySelector('.onboarding-step.active');
-    const selected = current.querySelectorAll('.select-btn.active');
-    if (current.dataset.step === '1' && !selected.length) return alert('Seçim yap!');
-    if (current.dataset.step === '2' && !selected.length) return alert('Seçim yap!');
-    if (current.dataset.step === '3' && !selected.length) return alert('Seçim yap!');
-    if (current.dataset.step === '1') onboardingData.age = selected[0].dataset.age;
-    if (current.dataset.step === '2') onboardingData.genres = [...selected].map(s => s.dataset.genre);
-    if (current.dataset.step === '3') onboardingData.frequency = selected[0].dataset.frequency;
-    document.querySelectorAll('.onboarding-step').forEach(s => s.classList.remove('active'));
-    document.querySelector(`[data-step="${step}"]`).classList.add('active');
-    tg.HapticFeedback?.impactOccurred('light');
-}
+// Kategoriler
+const CATEGORIES = [
+    { id: "all", name: "Tümü", icon: "fa-grid-2" },
+    { id: "bulmaca", name: "Bulmaca", icon: "fa-puzzle-piece" },
+    { id: "aksiyon", name: "Aksiyon", icon: "fa-bolt" },
+    { id: "strateji", name: "Strateji", icon: "fa-chess" },
+    { id: "spor", name: "Spor", icon: "fa-futbol" },
+    { id: "yaris", name: "Yarış", icon: "fa-flag-checkered" },
+    { id: "kelime", name: "Kelime", icon: "fa-font" },
+    { id: "kart", name: "Kart", icon: "fa-club" }
+];
 
-function completeOnboarding() {
-    const selected = document.querySelector('[data-step="3"]').querySelectorAll('.select-btn.active');
-    if (!selected.length) return alert('Seçim yap!');
-    onboardingData.frequency = selected[0].dataset.frequency;
-    document.getElementById('onboarding').style.display = 'none';
-    document.getElementById('mainApp').classList.add('active');
-    initUser();
-    tg.HapticFeedback?.notificationOccurred('success');
-}
+// Öne Çıkan Oyunlar (Ana sayfa için)
+const FEATURED_GAMES = GAMES.slice(0, 4);
 
-document.querySelectorAll('.select-btn').forEach(b => b.addEventListener('click', function() {
-    const p = this.parentElement;
-    if (!p.classList.contains('genre-grid')) p.querySelectorAll('.select-btn').forEach(x => x.classList.remove('active'));
-    this.classList.toggle('active');
-}));
-
-function initUser() {
-    if (tg.initDataUnsafe?.user) {
-        const u = tg.initDataUnsafe.user;
-        userData.isPremium = u.is_premium || false;
-        document.getElementById('userName').textContent = u.first_name || 'Varia';
-        document.getElementById('userUsername').textContent = u.username ? '@'+u.username : '@varia';
-        document.getElementById('userAvatar').textContent = (u.first_name||'V')[0].toUpperCase();
-        document.getElementById('profileName').textContent = u.first_name || 'Varia';
-        document.getElementById('profileAvatar').textContent = (u.first_name||'V')[0].toUpperCase();
-        document.getElementById('profileId').textContent = '#'+(u.id||'12345').slice(0,8);
-        document.getElementById('referralLink').textContent = `t.me/VariaGameBot?start=${u.id||'varia'}`;
-        if (onboardingData.genres?.length) {
-            const map = { aksiyon:'stickman', yaris:'moto-x3m', bulmaca:'cut-rope', spor:'soccer' };
-            recommendedGame = oyunlar.find(o => o.embed === map[onboardingData.genres[0]]) || oyunlar[0];
-        }
-        document.getElementById('recommendedGameText').textContent = `${recommendedGame.ad} - Senin için!`;
+// ==================== DEĞİŞKENLER ====================
+let userData = {
+    name: "Varia",
+    username: "varia",
+    level: 1,
+    xp: 0,
+    balance: 5.00,
+    totalEarned: 892,
+    totalGames: 47,
+    totalMinutes: 0,
+    referralCount: 0,
+    referralLink: "https://t.me/VariaGameBot?start=ref_12345",
+    friends: [],
+    streak: 3,
+    lastClaim: null,
+    dailyAmount: 2.50,
+    settings: {
+        notifications: true,
+        sound: false,
+        vibration: true,
+        autoPlay: true
     }
-    calculateLevel(); updateUI(); renderTabs(); renderStreak(); renderFeatured(); renderCharts();
-    if (userData.settings.autoPlay && onboardingData.frequency === 'daily') setTimeout(() => { if(confirm(`🎮 ${recommendedGame.name} oyna?`)) playRecommendedGame(); }, 1500);
+};
+
+let currentPage = "home";
+let currentTab = "Tümü";
+let weeklyChart, monthlyChart;
+
+// ==================== OYUN İKONLARI ====================
+function getGameIcon(iconName) {
+    return `<i class="fas ${iconName}"></i>`;
 }
 
-function calculateLevel() {
-    userData.level = Math.floor(0.1 * Math.sqrt(userData.xp||0)) + 1;
-    userData.xpToNextLevel = Math.pow((userData.level)/0.1, 2);
-    userData.earningRate = 0.0025 * (1 + userData.level*0.05) * (userData.isPremium?1.5:1);
-    const p = Math.min(((userData.xp||0)/userData.xpToNextLevel)*100, 100);
-    document.getElementById('xpFill').style.width = p+'%';
-    document.getElementById('currentXp').textContent = Math.floor(userData.xp||0);
-    document.getElementById('xpToNextLevel').textContent = Math.floor(userData.xpToNextLevel);
-    document.getElementById('userLevel').textContent = userData.level;
-    document.getElementById('profileLevel').textContent = userData.level;
-    document.getElementById('profileXp').textContent = Math.floor(userData.xp||0);
-    document.getElementById('earningRate').textContent = `💰 $${userData.earningRate.toFixed(4)}/dk`;
+// ==================== OYUNLARI RENDER ET ====================
+function renderGames(filter = "all", search = "") {
+    const container = document.getElementById("allGamesList");
+    if (!container) return;
+    
+    let filtered = [...GAMES];
+    
+    if (filter !== "all") {
+        filtered = filtered.filter(g => g.category === filter);
+    }
+    
+    if (search) {
+        filtered = filtered.filter(g => g.name.toLowerCase().includes(search.toLowerCase()));
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: #8E8E93;">
+            <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 10px;"></i>
+            <p>Oyun bulunamadı</p>
+        </div>`;
+        return;
+    }
+    
+    container.innerHTML = filtered.map(game => `
+        <div class="game-item" onclick="openGame('${game.embed}', '${game.name}')">
+            <div class="game-icon" style="background: linear-gradient(135deg, ${game.iconColor}20, ${game.iconColor}40);">
+                <i class="fas ${game.icon}" style="color: ${game.iconColor}; font-size: 1.5rem;"></i>
+            </div>
+            <div class="game-content">
+                <div class="game-name">${game.name}</div>
+                <div class="game-meta">
+                    <span><i class="fas fa-star" style="color: #FF9F0A;"></i> ${game.rating}</span>
+                    <span style="margin-left: 8px;"><i class="fas fa-play"></i> ${game.plays}</span>
+                    <span style="margin-left: 8px;"><i class="fas fa-mobile-alt"></i> Dik</span>
+                </div>
+            </div>
+            <i class="fas fa-play-circle" style="color: #007AFF; font-size: 1.2rem;"></i>
+        </div>
+    `).join("");
 }
 
-function addXP(amt) {
-    const old = userData.level;
-    userData.xp = (userData.xp||0) + amt;
-    calculateLevel();
-    if (userData.level > old) showBanner(`🎉 Seviye ${userData.level}!`, '🌟');
-    updateUI();
+// Öne Çıkan Oyunları Render Et
+function renderFeaturedGames() {
+    const container = document.getElementById("featuredGames");
+    if (!container) return;
+    
+    container.innerHTML = FEATURED_GAMES.map(game => `
+        <div class="game-card" onclick="openGame('${game.embed}', '${game.name}')">
+            <div class="game-icon" style="background: linear-gradient(135deg, ${game.iconColor}20, ${game.iconColor}40);">
+                <i class="fas ${game.icon}" style="color: ${game.iconColor}; font-size: 1.8rem;"></i>
+            </div>
+            <h4>${game.name}</h4>
+            <p><i class="fas fa-star" style="color: #FF9F0A;"></i> ${game.rating}</p>
+        </div>
+    `).join("");
 }
+
+// Kategorileri Render Et
+function renderCategories() {
+    const container = document.getElementById("tabsContainer");
+    if (!container) return;
+    
+    container.innerHTML = CATEGORIES.map(cat => `
+        <button class="tab-item ${currentTab === cat.name ? 'active' : ''}" data-tab="${cat.name}" onclick="switchTab('${cat.name}')">
+            <i class="fas ${cat.icon}" style="margin-right: 4px;"></i> ${cat.name}
+        </button>
+    `).join("");
+}
+
+// ==================== OYUN AÇ/KAPAT ====================
+function openGame(embedUrl, gameName) {
+    const modal = document.getElementById("gameModal");
+    const iframe = document.getElementById("gameIframe");
+    const title = document.getElementById("modalGameTitle");
+    
+    title.textContent = gameName;
+    iframe.src = embedUrl;
+    modal.style.display = "flex";
+    
+    // Ekran yönü kontrolü
+    if (window.innerWidth > window.innerHeight) {
+        document.getElementById("rotateWarning").style.display = "flex";
+    } else {
+        document.getElementById("rotateWarning").style.display = "none";
+    }
+    
+    document.body.style.overflow = "hidden";
+    
+    // Kazanç başlat
+    startEarning();
+}
+
+function closeGameModal() {
+    const modal = document.getElementById("gameModal");
+    const iframe = document.getElementById("gameIframe");
+    
+    modal.style.display = "none";
+    iframe.src = "";
+    document.body.style.overflow = "";
+    
+    // Rotate uyarısını gizle
+    const warning = document.getElementById("rotateWarning");
+    if (warning) warning.style.display = "none";
+    
+    // Kazancı durdur
+    stopEarning();
+}
+
+// ==================== KAZANÇ SİSTEMİ ====================
+let earningInterval = null;
+let currentEarning = 0;
 
 function startEarning() {
-    if (earningInterval) clearInterval(earningInterval);
+    if (earningInterval) clearInterval(interval);
+    
     earningInterval = setInterval(() => {
-        if (gameStartTime && (Date.now()-gameStartTime)/60000 >= 0.5) {
-            const earned = 0.5 * userData.earningRate;
-            userData.balance += earned;
-            userData.totalEarned += earned;
-            userData.totalMinutes = (userData.totalMinutes||0) + 0.5;
-            addXP(3); updateUI();
-            showBanner(`+$${earned.toFixed(4)}`, '💰');
-            gameStartTime = Date.now();
+        const earningRate = 0.0025;
+        currentEarning += earningRate;
+        
+        const banner = document.getElementById("earningBanner");
+        const amountSpan = document.getElementById("earningAmount");
+        
+        if (banner && amountSpan) {
+            banner.classList.add("active");
+            amountSpan.textContent = `+$${currentEarning.toFixed(4)}`;
+            
+            setTimeout(() => {
+                banner.classList.remove("active");
+            }, 2000);
         }
-    }, 30000);
+        
+        // XP ve bakiye güncelle
+        userData.balance += earningRate;
+        userData.xp += 1;
+        userData.totalMinutes++;
+        
+        updateUI();
+        
+    }, 60000); // Her dakika
 }
 
-function showBanner(msg, emoji) {
-    const b = document.getElementById('earningBanner');
-    document.getElementById('earningMessage').textContent = msg;
-    document.getElementById('earningAmount').innerHTML = `${emoji} $${userData.earningRate.toFixed(4)}/dk`;
-    b.classList.add('active');
-    setTimeout(() => b.classList.remove('active'), 2500);
+function stopEarning() {
+    if (earningInterval) {
+        clearInterval(earningInterval);
+        earningInterval = null;
+    }
+    currentEarning = 0;
 }
 
-function playRecommendedGame() { openGame(recommendedGame.embed, recommendedGame.name); }
-function openGame(id, title) {
-    document.getElementById('modalGameTitle').textContent = title;
-    document.getElementById('gameIframe').src = `https://playgama.com/embed/${id}`;
-    document.getElementById('gameModal').style.display = 'block';
-    gameStartTime = Date.now(); startEarning();
-    userData.gamesPlayed++; addXP(5); updateUI();
-    tg.HapticFeedback?.impactOccurred('medium');
-}
-function closeGameModal() {
-    document.getElementById('gameModal').style.display = 'none';
-    document.getElementById('gameIframe').src = '';
-    if (gameStartTime) { addXP(Math.floor((Date.now()-gameStartTime)/60000*5)); gameStartTime = null; }
+// ==================== GÜNLÜK ÖDÜL ====================
+function claimDaily() {
+    const today = new Date().toDateString();
+    if (userData.lastClaim === today) {
+        alert("Bugün zaten ödülünü aldın! Yarın tekrar dene.");
+        return;
+    }
+    
+    userData.balance += userData.dailyAmount;
+    userData.lastClaim = today;
+    userData.streak = (userData.streak % 7) + 1;
+    
+    if (userData.streak === 1) {
+        userData.dailyAmount = 2.50;
+    } else if (userData.streak <= 3) {
+        userData.dailyAmount = 3.00;
+    } else if (userData.streak <= 6) {
+        userData.dailyAmount = 5.00;
+    } else {
+        userData.dailyAmount = 10.00;
+    }
+    
+    updateUI();
+    renderStreak();
+    alert(`🎉 Tebrikler! $${userData.dailyAmount.toFixed(2)} kazandın!`);
 }
 
 function renderStreak() {
-    const d = ['P','S','Ç','P','C','C','P'];
-    document.getElementById('streakTracker').innerHTML = d.map((x,i) => {
-        let c = i < userData.streak ? 'completed' : (i===userData.streak?'current':'');
-        return `<div class="streak-day ${c}"><div class="day-circle">${x}</div><span style="font-size:0.6rem;">${['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'][i]}</span></div>`;
-    }).join('');
-    document.getElementById('dailyAmount').textContent = (0.5 + userData.streak*0.25).toFixed(2);
-}
-function claimDaily() {
-    if (userData.dailyClaimed) return alert('Bugün topladın!');
-    const amt = 0.5 + userData.streak*0.25;
-    userData.balance += amt; userData.streak = (userData.streak%7)+1;
-    userData.dailyClaimed = true; userData.totalEarned += amt;
-    addXP(10*userData.streak); updateUI(); renderStreak();
-    tg.HapticFeedback?.notificationOccurred('success');
-    showBanner(`+$${amt.toFixed(2)} günlük!`, '🎁');
-}
-
-function updateUI() {
-    document.getElementById('balanceDisplay').textContent = userData.balance.toFixed(2);
-    document.getElementById('totalEarned').textContent = '$'+userData.totalEarned.toFixed(2);
-    document.getElementById('totalGames').textContent = userData.gamesPlayed;
-    document.getElementById('totalMinutes').textContent = Math.floor(userData.totalMinutes||0);
-    document.getElementById('referralCountDisplay').textContent = userData.referrals;
-    document.getElementById('referralCount').textContent = `${userData.referrals}/10`;
-    document.getElementById('referralProgress').style.width = `${(userData.referrals/10)*100}%`;
+    const container = document.getElementById("streakTracker");
+    if (!container) return;
+    
+    const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+    
+    container.innerHTML = days.map((day, i) => {
+        const dayNum = i + 1;
+        let status = "";
+        if (dayNum < userData.streak) status = "completed";
+        else if (dayNum === userData.streak) status = "current";
+        
+        return `
+            <div class="streak-day ${status}">
+                <div class="day-circle">${dayNum}</div>
+                <span>${day}</span>
+            </div>
+        `;
+    }).join("");
 }
 
-function switchPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(id+'Page').classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelector(`[data-page="${id}"]`).classList.add('active');
-    document.getElementById('pageTitle').textContent = id==='home'?'VARİA':id==='games'?'Oyunlar':id==='referral'?'Referans':'Profil';
-    if (id==='games') renderAll();
-    if (id==='profile') { updateUI(); renderMonthly(); }
-    tg.HapticFeedback?.selectionChanged();
+// ==================== REFERANS SİSTEMİ ====================
+function copyReferralLink() {
+    navigator.clipboard.writeText(userData.referralLink);
+    alert("Referans linki kopyalandı!");
 }
 
-function renderTabs() {
-    const cats = ['Tümü','Aksiyon','Yarış','Bulmaca','Spor','Koşu'];
-    document.getElementById('tabsContainer').innerHTML = cats.map(c => `<button class="tab-item ${c===currentTab?'active':''}" onclick="switchTab('${c}')">${c}</button>`).join('');
-}
-function switchTab(t) { currentTab = t; renderTabs(); filterGames(); }
+// ==================== FİLTRELEME ====================
 function filterGames() {
-    const term = document.getElementById('searchInput')?.value.toLowerCase()||'';
-    const filtered = oyunlar.filter(o => (currentTab==='Tümü'||o.kategori===currentTab) && o.ad.toLowerCase().includes(term));
-    renderList(filtered, 'allGamesList');
-}
-function renderList(games, id) {
-    document.getElementById(id).innerHTML = games.map(g => `
-        <div class="game-item" onclick="openGame('${g.embed}','${g.ad}')">
-            <div class="game-icon"><i class="fas ${g.ikon}"></i></div>
-            <div class="game-content"><div class="game-name">${g.ad}</div><div class="game-meta" style="font-size:0.7rem;">${g.kategori} ⭐ ${g.puan}</div></div>
-            <div style="font-size:0.7rem;">${g.oynanma}</div>
-        </div>
-    `).join('');
-}
-function renderFeatured() { renderList(oyunlar.slice(0,4), 'featuredGames'); }
-function renderAll() { renderList(oyunlar, 'allGamesList'); }
-
-function renderCharts() {
-    const ctx = document.getElementById('weeklyChart').getContext('2d');
-    if (weeklyChart) weeklyChart.destroy();
-    weeklyChart = new Chart(ctx, { type:'line', data:{ labels:['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'], datasets:[{ data:[45,82,120,95,150,200,200], borderColor:'#5856D6', backgroundColor:'rgba(88,86,214,0.04)', tension:0.4, fill:true }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} } } });
-}
-function renderMonthly() {
-    const ctx = document.getElementById('monthlyChart').getContext('2d');
-    if (monthlyChart) monthlyChart.destroy();
-    monthlyChart = new Chart(ctx, { type:'bar', data:{ labels:['1.Hft','2.Hft','3.Hft','4.Hft'], datasets:[{ data:[120,250,180,342], backgroundColor:'#5856D6', borderRadius:6 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} } } });
+    const searchInput = document.getElementById("searchInput");
+    const searchTerm = searchInput ? searchInput.value : "";
+    renderGames(currentTab === "Tümü" ? "all" : currentTab.toLowerCase(), searchTerm);
 }
 
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-function toggleSetting(s) {
-    userData.settings[s] = !userData.settings[s];
-    document.getElementById('toggle'+s.charAt(0).toUpperCase()+s.slice(1)).classList.toggle('active', userData.settings[s]);
+function switchTab(tabName) {
+    currentTab = tabName;
+    renderCategories();
+    
+    if (currentPage === "games") {
+        renderGames(tabName === "Tümü" ? "all" : tabName.toLowerCase(), "");
+    }
 }
-function copyReferralLink() { navigator.clipboard?.writeText('https://'+document.getElementById('referralLink').textContent); alert('✅ Kopyalandı!'); }
-function openBalanceDetails() { alert(`💰 ${userData.balance.toFixed(2)}\n📊 Toplam: ${userData.totalEarned.toFixed(2)}\n⭐ Lv.${userData.level}`); }
-function openStreakInfo() { alert(`🔥 ${userData.streak} gün!\nBugün: $${(0.5+userData.streak*0.25).toFixed(2)}`); }
-function openStatsModal() { alert('📊 İstatistikler'); }
-function openFilterModal() { alert('🔍 Filtreleme'); }
-function openHelpModal() { alert('📞 @VariaGameBot'); }
-function shareApp() { tg.openTelegramLink('https://t.me/share/url?url=https://t.me/VariaGameBot&text=VARİA GAME!'); }
 
-document.getElementById('friendList').innerHTML = [{name:'Ali',earned:2.5},{name:'Ayşe',earned:5}].map(f => `<div class="game-item"><div class="user-avatar" style="width:36px;height:36px;">${f.name[0]}</div><div class="game-content"><div>${f.name}</div></div><div style="color:#34C759;">+$${f.earned}</div></div>`).join('');
-document.getElementById('notificationsList').innerHTML = [{title:'🎁 Günlük Ödül!',msg:'Ödülün hazır!'},{title:'🎮 Hoş Geldin!',msg:'Oyna, kazan!'}].map(n => `<div class="menu-item"><i class="fas fa-bell"></i><div><div>${n.title}</div><small>${n.msg}</small></div></div>`).join('');
+// ==================== SAYFA GEÇİŞLERİ ====================
+function switchPage(page) {
+    currentPage = page;
+    
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(`${page}Page`).classList.add("active");
+    
+    document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active"));
+    document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
+    
+    const titles = {
+        home: "Oyunlar",
+        games: "Tüm Oyunlar",
+        referral: "Referans",
+        profile: "Profil"
+    };
+    
+    const titleEl = document.getElementById("pageTitle");
+    if (titleEl) titleEl.textContent = titles[page] || "VARİA";
+    
+    if (page === "games") {
+        renderGames(currentTab === "Tümü" ? "all" : currentTab.toLowerCase(), "");
+    } else if (page === "home") {
+        renderFeaturedGames();
+        renderStreak();
+    } else if (page === "referral") {
+        renderReferral();
+    } else if (page === "profile") {
+        renderProfile();
+    }
+}
 
-window.nextOnboardingStep = nextOnboardingStep;
-window.completeOnboarding = completeOnboarding;
-window.switchPage = switchPage;
-window.switchTab = switchTab;
-window.filterGames = filterGames;
-window.openGame = openGame;
-window.closeGameModal = closeGameModal;
-window.playRecommendedGame = playRecommendedGame;
-window.claimDaily = claimDaily;
-window.copyReferralLink = copyReferralLink;
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.toggleSetting = toggleSetting;
-window.openBalanceDetails = openBalanceDetails;
-window.openStreakInfo = openStreakInfo;
-window.openStatsModal = openStatsModal;
-window.openFilterModal = openFilterModal;
-window.openHelpModal = openHelpModal;
-window.shareApp = shareApp;
+function renderReferral() {
+    const countEl = document.getElementById("referralCount");
+    const progressEl = document.getElementById("referralProgress");
+    const friendListEl = document.getElementById("friendList");
+    
+    if (countEl) countEl.textContent = `${userData.referralCount}/10`;
+    if (progressEl) progressEl.style.width = `${(userData.referralCount / 10) * 100}%`;
+    
+    if (friendListEl) {
+        if (userData.friends.length === 0) {
+            friendListEl.innerHTML = `<div style="text-align: center; padding: 20px; color: #8E8E93;">
+                <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p>Henüz arkadaşın yok</p>
+                <p style="font-size: 0.8rem;">Linkini paylaşarak arkadaşlarını davet et!</p>
+            </div>`;
+        } else {
+            friendListEl.innerHTML = userData.friends.map(f => `
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <div class="friend-avatar">${f.name.charAt(0)}</div>
+                        <div><strong>${f.name}</strong><br><small style="color: #8E8E93;">${f.date}</small></div>
+                    </div>
+                    <div class="friend-earning">+$${f.earned}</div>
+                </div>
+            `).join("");
+        }
+    }
+}
+
+function renderProfile() {
+    const totalEarnedEl = document.getElementById("totalEarned");
+    const totalGamesEl = document.getElementById("totalGames");
+    const totalMinutesEl = document.getElementById("totalMinutes");
+    const profileLevelEl = document.getElementById("profileLevel");
+    const profileXpEl = document.getElementById("profileXp");
+    
+    if (totalEarnedEl) totalEarnedEl.textContent = `$${userData.totalEarned}`;
+    if (totalGamesEl) totalGamesEl.textContent = userData.totalGames;
+    if (totalMinutesEl) totalMinutesEl.textContent = userData.totalMinutes;
+    if (profileLevelEl) profileLevelEl.textContent = userData.level;
+    if (profileXpEl) profileXpEl.textContent = userData.xp;
+}
+
+// ==================== AYARLAR ====================
+function toggleSetting(setting) {
+    const toggle = document.getElementById(`toggle${setting.charAt(0).toUpperCase() + setting.slice(1)}`);
+    userData.settings[setting] = !userData.settings[setting];
+    
+    if (toggle) {
+        if (userData.settings[setting]) {
+            toggle.classList.add("active");
+        } else {
+            toggle.classList.remove("active");
+        }
+    }
+}
+
+// ==================== MODALLAR ====================
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add("active");
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove("active");
+}
+
+function openFilterModal() {
+    alert("Filtreleme özelliği yakında!");
+}
+
+function openStatsModal() {
+    alert("Detaylı istatistikler yakında!");
+}
+
+function openStreakInfo() {
+    alert("🔥 Günlük streak'in ne kadar yüksek olursa, ödüllerin o kadar büyür! Her gün giriş yapmayı unutma!");
+}
+
+function openBalanceDetails() {
+    alert(`💰 Güncel Bakiye: $${userData.balance.toFixed(2)}\n\nToplam Kazanç: $${userData.totalEarned}\n\nOyun oynayarak kazanmaya devam et!`);
+}
+
+function openHelpModal() {
+    alert("📖 Yardım\n\n- Oyun oynayarak XP ve para kazan\n- Her dakika otomatik kazanç\n- Arkadaşlarını davet et, %10 kazan\n- Günlük ödülleri topla\n- Dik mod oyunlar telefon için optimize edilmiştir");
+}
+
+function shareApp() {
+    if (navigator.share) {
+        navigator.share({
+            title: "VARİA GAME",
+            text: "Oyun oynayarak para kazan!",
+            url: userData.referralLink
+        });
+    } else {
+        copyReferralLink();
+    }
+}
+
+function playRecommendedGame() {
+    const randomGame = GAMES[Math.floor(Math.random() * GAMES.length)];
+    openGame(randomGame.embed, randomGame.name);
+}
+
+// ==================== GRAFİKLER ====================
+function initCharts() {
+    const weeklyCtx = document.getElementById("weeklyChart")?.getContext("2d");
+    const monthlyCtx = document.getElementById("monthlyChart")?.getContext("2d");
+    
+    if (weeklyCtx) {
+        weeklyChart = new Chart(weeklyCtx, {
+            type: 'line',
+            data: {
+                labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+                datasets: [{
+                    data: [12, 19, 15, 25, 22, 35, 42],
+                    borderColor: '#5856D6',
+                    backgroundColor: 'rgba(88,86,214,0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#5856D6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+    
+    if (monthlyCtx) {
+        monthlyChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['1.Hf', '2.Hf', '3.Hf', '4.Hf'],
+                datasets: [{
+                    data: [125, 180, 210, 275],
+                    backgroundColor: 'rgba(88,86,214,0.7)',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+}
+
+// ==================== UI GÜNCELLEME ====================
+function updateUI() {
+    const balanceEl = document.getElementById("balanceDisplay");
+    const userLevelEl = document.getElementById("userLevel");
+    const currentXpEl = document.getElementById("currentXp");
+    const xpToNextEl = document.getElementById("xpToNextLevel");
+    const xpFillEl = document.getElementById("xpFill");
+    const referralCountEl = document.getElementById("referralCountDisplay");
+    const dailyAmountEl = document.getElementById("dailyAmount");
+    
+    if (balanceEl) balanceEl.textContent = userData.balance.toFixed(2);
+    if (userLevelEl) userLevelEl.textContent = userData.level;
+    if (currentXpEl) currentXpEl.textContent = userData.xp;
+    if (xpToNextEl) xpToNextEl.textContent = userData.level * 100;
+    if (xpFillEl) xpFillEl.style.width = `${(userData.xp / (userData.level * 100)) * 100}%`;
+    if (referralCountEl) referralCountEl.textContent = userData.referralCount;
+    if (dailyAmountEl) dailyAmountEl.textContent = userData.dailyAmount.toFixed(2);
+}
+
+// ==================== ONBOARDING ====================
+let currentStep = 1;
+let userAge = null;
+let userGenres = [];
+let userFrequency = null;
+
+function nextOnboardingStep(step) {
+    document.querySelector(`.onboarding-step[data-step="${currentStep}"]`).classList.remove("active");
+    currentStep = step;
+    document.querySelector(`.onboarding-step[data-step="${currentStep}"]`).classList.add("active");
+    
+    document.querySelectorAll(".dot").forEach((dot, i) => {
+        dot.classList.remove("active", "completed");
+        if (i < currentStep - 1) dot.classList.add("completed");
+        else if (i === currentStep - 1) dot.classList.add("active");
+    });
+}
+
+function completeOnboarding() {
+    document.getElementById("onboarding").style.display = "none";
+    document.getElementById("mainApp").classList.add("active");
+    
+    // Telegram WebApp'i başlat
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        
+        const user = window.Telegram.WebApp.initDataUnsafe?.user;
+        if (user) {
+            userData.name = user.first_name || user.username || "Varia";
+            userData.username = user.username || "varia";
+            document.getElementById("userName").textContent = userData.name;
+            document.getElementById("userUsername").textContent = `@${userData.username}`;
+            document.getElementById("userAvatar").textContent = userData.name.charAt(0);
+            document.getElementById("profileAvatar").textContent = userData.name.charAt(0);
+            document.getElementById("profileName").textContent = userData.name;
+        }
+    }
+    
+    renderCategories();
+    renderFeaturedGames();
+    renderGames();
+    renderStreak();
+    initCharts();
+    updateUI();
+}
+
+// ==================== ONBOARDING SEÇİMLER ====================
+document.querySelectorAll("[data-age]").forEach(btn => {
+    btn.addEventListener("click", function() {
+        document.querySelectorAll("[data-age]").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+        userAge = this.dataset.age;
+    });
+});
+
+document.querySelectorAll("[data-genre]").forEach(btn => {
+    btn.addEventListener("click", function() {
+        this.classList.toggle("active");
+        const genre = this.dataset.genre;
+        if (userGenres.includes(genre)) {
+            userGenres = userGenres.filter(g => g !== genre);
+        } else {
+            userGenres.push(genre);
+        }
+    });
+});
+
+document.querySelectorAll("[data-frequency]").forEach(btn => {
+    btn.addEventListener("click", function() {
+        document.querySelectorAll("[data-frequency]").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+        userFrequency = this.dataset.frequency;
+    });
+});
+
+// ==================== EKRAN YÖNÜ KONTROLÜ ====================
+function checkOrientation() {
+    const warning = document.getElementById("rotateWarning");
+    if (!warning) return;
+    
+    if (window.innerWidth > window.innerHeight) {
+        warning.style.display = "flex";
+    } else {
+        warning.style.display = "none";
+    }
+}
+
+window.addEventListener("resize", checkOrientation);
+window.addEventListener("orientationchange", checkOrientation);
+
+// ==================== BAŞLANGIÇ ====================
+document.addEventListener("DOMContentLoaded", () => {
+    renderCategories();
+    renderFeaturedGames();
+    renderStreak();
+    initCharts();
+    updateUI();
+    checkOrientation();
+});
