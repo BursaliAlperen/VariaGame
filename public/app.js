@@ -1,27 +1,21 @@
-// ==================== OYUN VERİLERİ (SADECE DİK MOD OYUNLAR - GERÇEK İKONLAR) ====================
+// ==================== OYUN VERİLERİ (GERÇEK GÖRSELLERLE) ====================
 const GAMES = [
-    { id: 1, name: "2048", category: "bulmaca", icon: "fa-th", iconColor: "#FF9F0A", embed: "https://www.crazygames.com/embed/2048", rating: 4.8, plays: "2.3M", orientation: "portrait" },
-    { id: 2, name: "Sudoku", category: "bulmaca", icon: "fa-puzzle-piece", iconColor: "#5856D6", embed: "https://www.crazygames.com/embed/sudoku", rating: 4.7, plays: "1.8M", orientation: "portrait" },
-    { id: 3, name: "Solitaire", category: "kart", icon: "fa-club", iconColor: "#34C759", embed: "https://www.crazygames.com/embed/solitaire", rating: 4.6, plays: "3.2M", orientation: "portrait" },
-    { id: 4, name: "Mahjong Connect", category: "bulmaca", icon: "fa-border-all", iconColor: "#AF52DE", embed: "https://www.crazygames.com/embed/mahjong-connect", rating: 4.5, plays: "1.2M", orientation: "portrait" },
-    { id: 5, name: "Word Search", category: "kelime", icon: "fa-search", iconColor: "#007AFF", embed: "https://www.crazygames.com/embed/word-search", rating: 4.4, plays: "987K", orientation: "portrait" },
-    { id: 6, name: "Bubble Shooter", category: "bulmaca", icon: "fa-circle", iconColor: "#FF3B30", embed: "https://www.crazygames.com/embed/bubble-shooter", rating: 4.6, plays: "5.1M", orientation: "portrait" },
-    { id: 7, name: "Tower Defense", category: "strateji", icon: "fa-castle", iconColor: "#FF9500", embed: "https://www.crazygames.com/embed/tower-defense", rating: 4.5, plays: "2.5M", orientation: "portrait" },
-    { id: 8, name: "Sniper Shot", category: "aksiyon", icon: "fa-crosshairs", iconColor: "#FF2D55", embed: "https://www.crazygames.com/embed/sniper-shot", rating: 4.3, plays: "1.5M", orientation: "portrait" },
-    { id: 9, name: "Penalty Kick", category: "spor", icon: "fa-futbol", iconColor: "#4CD964", embed: "https://www.crazygames.com/embed/penalty-kick", rating: 4.4, plays: "3.8M", orientation: "portrait" },
-    { id: 10, name: "Parking Master", category: "yaris", icon: "fa-car", iconColor: "#5E5CE6", embed: "https://www.crazygames.com/embed/parking-master", rating: 4.2, plays: "2.1M", orientation: "portrait" },
-    { id: 11, name: "Fruit Ninja", category: "aksiyon", icon: "fa-apple-alt", iconColor: "#FF3B30", embed: "https://www.crazygames.com/embed/fruit-ninja", rating: 4.7, plays: "8.2M", orientation: "portrait" },
-    { id: 12, name: "Temple Run", category: "aksiyon", icon: "fa-running", iconColor: "#FF9500", embed: "https://www.crazygames.com/embed/temple-run", rating: 4.6, plays: "12.5M", orientation: "portrait" },
-    { id: 13, name: "Subway Surfers", category: "aksiyon", icon: "fa-subway", iconColor: "#34C759", embed: "https://www.crazygames.com/embed/subway-surfers", rating: 4.8, plays: "15.2M", orientation: "portrait" },
-    { id: 14, name: "Helix Jump", category: "aksiyon", icon: "fa-chart-line", iconColor: "#5856D6", embed: "https://www.crazygames.com/embed/helix-jump", rating: 4.4, plays: "6.7M", orientation: "portrait" },
-    { id: 15, name: "Water Sort Puzzle", category: "bulmaca", icon: "fa-tint", iconColor: "#007AFF", embed: "https://www.crazygames.com/embed/water-sort-puzzle", rating: 4.5, plays: "3.4M", orientation: "portrait" },
-    { id: 16, name: "Paper.io 2", category: "strateji", icon: "fa-file", iconColor: "#AF52DE", embed: "https://www.crazygames.com/embed/paper-io-2", rating: 4.3, plays: "4.2M", orientation: "portrait" },
-    { id: 17, name: "Cut the Rope", category: "bulmaca", icon: "fa-cut", iconColor: "#FF9F0A", embed: "https://www.crazygames.com/embed/cut-the-rope", rating: 4.7, plays: "9.8M", orientation: "portrait" },
-    { id: 18, name: "Stack Balls", category: "aksiyon", icon: "fa-layer-group", iconColor: "#FF2D55", embed: "https://www.crazygames.com/embed/stack-balls", rating: 4.2, plays: "1.9M", orientation: "portrait" },
-    { id: 19, name: "Idle Miner", category: "strateji", icon: "fa-hammer", iconColor: "#FF9500", embed: "https://www.crazygames.com/embed/idle-miner-tycoon", rating: 4.3, plays: "2.8M", orientation: "portrait" },
-    { id: 20, name: "Crossword", category: "kelime", icon: "fa-pen", iconColor: "#5856D6", embed: "https://www.crazygames.com/embed/crossword", rating: 4.4, plays: "876K", orientation: "portrait" },
-    { id: 21, name: "Nonogram", category: "bulmaca", icon: "fa-th-large", iconColor: "#34C759", embed: "https://www.crazygames.com/embed/nonogram", rating: 4.5, plays: "654K", orientation: "portrait" },
-    { id: 22, name: "Merge Dragons", category: "strateji", icon: "fa-dragon", iconColor: "#AF52DE", embed: "https://www.crazygames.com/embed/merge-dragons", rating: 4.6, plays: "5.4M", orientation: "portrait" }
+    { id: 1, name: "2048", category: "bulmaca", image: "https://images.crazygames.com/games/2048/cover-1585662116897.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/2048", rating: 4.8, plays: "2.3M" },
+    { id: 2, name: "Sudoku", category: "bulmaca", image: "https://images.crazygames.com/games/sudoku/cover-1585662106827.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/sudoku", rating: 4.7, plays: "1.8M" },
+    { id: 3, name: "Solitaire", category: "kart", image: "https://images.crazygames.com/games/solitaire/cover-1585662116896.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/solitaire", rating: 4.6, plays: "3.2M" },
+    { id: 4, name: "Mahjong Connect", category: "bulmaca", image: "https://images.crazygames.com/games/mahjong-connect/cover-1585662116888.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/mahjong-connect", rating: 4.5, plays: "1.2M" },
+    { id: 5, name: "Bubble Shooter", category: "bulmaca", image: "https://images.crazygames.com/games/bubble-shooter/cover-1585662116885.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/bubble-shooter", rating: 4.6, plays: "5.1M" },
+    { id: 6, name: "Tower Defense", category: "strateji", image: "https://images.crazygames.com/games/tower-defense/cover-1585662116907.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/tower-defense", rating: 4.5, plays: "2.5M" },
+    { id: 7, name: "Sniper Shot", category: "aksiyon", image: "https://images.crazygames.com/games/sniper-shot/cover-1585662116905.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/sniper-shot", rating: 4.3, plays: "1.5M" },
+    { id: 8, name: "Penalty Kick", category: "spor", image: "https://images.crazygames.com/games/penalty-kick/cover-1585662116893.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/penalty-kick", rating: 4.4, plays: "3.8M" },
+    { id: 9, name: "Parking Master", category: "yaris", image: "https://images.crazygames.com/games/parking-master/cover-1585662116891.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/parking-master", rating: 4.2, plays: "2.1M" },
+    { id: 10, name: "Fruit Ninja", category: "aksiyon", image: "https://images.crazygames.com/games/fruit-ninja/cover-1585662116892.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/fruit-ninja", rating: 4.7, plays: "8.2M" },
+    { id: 11, name: "Subway Surfers", category: "aksiyon", image: "https://images.crazygames.com/games/subway-surfers/cover-1585662116906.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/subway-surfers", rating: 4.8, plays: "15.2M" },
+    { id: 12, name: "Helix Jump", category: "aksiyon", image: "https://images.crazygames.com/games/helix-jump/cover-1585662116894.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/helix-jump", rating: 4.4, plays: "6.7M" },
+    { id: 13, name: "Water Sort Puzzle", category: "bulmaca", image: "https://images.crazygames.com/games/water-sort-puzzle/cover-1585662116909.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/water-sort-puzzle", rating: 4.5, plays: "3.4M" },
+    { id: 14, name: "Paper.io 2", category: "strateji", image: "https://images.crazygames.com/games/paper-io-2/cover-1585662116890.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/paper-io-2", rating: 4.3, plays: "4.2M" },
+    { id: 15, name: "Cut the Rope", category: "bulmaca", image: "https://images.crazygames.com/games/cut-the-rope/cover-1585662116888.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/cut-the-rope", rating: 4.7, plays: "9.8M" },
+    { id: 16, name: "Idle Miner", category: "strateji", image: "https://images.crazygames.com/games/idle-miner-tycoon/cover-1585662116895.png?auto=format,compress&q=75&cs=strip&ch=DPR&w=120&h=120&fit=crop", embed: "https://www.crazygames.com/embed/idle-miner-tycoon", rating: 4.3, plays: "2.8M" }
 ];
 
 // Kategoriler
@@ -32,11 +26,10 @@ const CATEGORIES = [
     { id: "strateji", name: "Strateji", icon: "fa-chess" },
     { id: "spor", name: "Spor", icon: "fa-futbol" },
     { id: "yaris", name: "Yarış", icon: "fa-flag-checkered" },
-    { id: "kelime", name: "Kelime", icon: "fa-font" },
     { id: "kart", name: "Kart", icon: "fa-club" }
 ];
 
-// Öne Çıkan Oyunlar (Ana sayfa için)
+// Öne Çıkan Oyunlar
 const FEATURED_GAMES = GAMES.slice(0, 4);
 
 // ==================== DEĞİŞKENLER ====================
@@ -45,16 +38,16 @@ let userData = {
     username: "varia",
     level: 1,
     xp: 0,
-    balance: 5.00,
-    totalEarned: 892,
-    totalGames: 47,
+    balance: 0.05,
+    totalEarned: 0.05,
+    totalGames: 0,
     totalMinutes: 0,
     referralCount: 0,
     referralLink: "https://t.me/VariaGameBot?start=ref_12345",
     friends: [],
-    streak: 3,
+    streak: 1,
     lastClaim: null,
-    dailyAmount: 2.50,
+    dailyAmount: 0.005,
     settings: {
         notifications: true,
         sound: false,
@@ -66,11 +59,9 @@ let userData = {
 let currentPage = "home";
 let currentTab = "Tümü";
 let weeklyChart, monthlyChart;
-
-// ==================== OYUN İKONLARI ====================
-function getGameIcon(iconName) {
-    return `<i class="fas ${iconName}"></i>`;
-}
+let earningInterval = null;
+let currentEarning = 0;
+let isGameOpen = false;
 
 // ==================== OYUNLARI RENDER ET ====================
 function renderGames(filter = "all", search = "") {
@@ -97,9 +88,7 @@ function renderGames(filter = "all", search = "") {
     
     container.innerHTML = filtered.map(game => `
         <div class="game-item" onclick="openGame('${game.embed}', '${game.name}')">
-            <div class="game-icon" style="background: linear-gradient(135deg, ${game.iconColor}20, ${game.iconColor}40);">
-                <i class="fas ${game.icon}" style="color: ${game.iconColor}; font-size: 1.5rem;"></i>
-            </div>
+            <img class="game-icon-img" src="${game.image}" alt="${game.name}" onerror="this.src='https://via.placeholder.com/44?text=${game.name.charAt(0)}'">
             <div class="game-content">
                 <div class="game-name">${game.name}</div>
                 <div class="game-meta">
@@ -113,15 +102,14 @@ function renderGames(filter = "all", search = "") {
     `).join("");
 }
 
-// Öne Çıkan Oyunları Render Et
 function renderFeaturedGames() {
     const container = document.getElementById("featuredGames");
     if (!container) return;
     
     container.innerHTML = FEATURED_GAMES.map(game => `
         <div class="game-card" onclick="openGame('${game.embed}', '${game.name}')">
-            <div class="game-icon" style="background: linear-gradient(135deg, ${game.iconColor}20, ${game.iconColor}40);">
-                <i class="fas ${game.icon}" style="color: ${game.iconColor}; font-size: 1.8rem;"></i>
+            <div class="game-icon">
+                <img src="${game.image}" alt="${game.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" onerror="this.src='https://via.placeholder.com/100?text=${game.name.charAt(0)}'">
             </div>
             <h4>${game.name}</h4>
             <p><i class="fas fa-star" style="color: #FF9F0A;"></i> ${game.rating}</p>
@@ -129,7 +117,6 @@ function renderFeaturedGames() {
     `).join("");
 }
 
-// Kategorileri Render Et
 function renderCategories() {
     const container = document.getElementById("tabsContainer");
     if (!container) return;
@@ -146,55 +133,69 @@ function openGame(embedUrl, gameName) {
     const modal = document.getElementById("gameModal");
     const iframe = document.getElementById("gameIframe");
     const title = document.getElementById("modalGameTitle");
+    const bottomNav = document.querySelector(".bottom-nav");
+    const appHeader = document.querySelector(".apple-header");
+    const tgTabs = document.querySelector(".tg-tabs");
+    
+    isGameOpen = true;
     
     title.textContent = gameName;
     iframe.src = embedUrl;
     modal.style.display = "flex";
     
-    // Ekran yönü kontrolü
-    if (window.innerWidth > window.innerHeight) {
-        document.getElementById("rotateWarning").style.display = "flex";
-    } else {
-        document.getElementById("rotateWarning").style.display = "none";
-    }
+    // Alt nav ve header'ı gizle
+    if (bottomNav) bottomNav.style.display = "none";
+    if (appHeader) appHeader.style.display = "none";
+    if (tgTabs) tgTabs.style.display = "none";
     
     document.body.style.overflow = "hidden";
     
     // Kazanç başlat
     startEarning();
+    
+    // Kullanıcı istatistiklerini güncelle
+    userData.totalGames++;
+    updateUI();
 }
 
 function closeGameModal() {
     const modal = document.getElementById("gameModal");
     const iframe = document.getElementById("gameIframe");
+    const bottomNav = document.querySelector(".bottom-nav");
+    const appHeader = document.querySelector(".apple-header");
+    const tgTabs = document.querySelector(".tg-tabs");
+    
+    isGameOpen = false;
     
     modal.style.display = "none";
     iframe.src = "";
-    document.body.style.overflow = "";
     
-    // Rotate uyarısını gizle
-    const warning = document.getElementById("rotateWarning");
-    if (warning) warning.style.display = "none";
+    // Alt nav ve header'ı geri göster
+    if (bottomNav) bottomNav.style.display = "flex";
+    if (appHeader) appHeader.style.display = "block";
+    if (tgTabs) tgTabs.style.display = "block";
+    
+    document.body.style.overflow = "";
     
     // Kazancı durdur
     stopEarning();
 }
 
-// ==================== KAZANÇ SİSTEMİ ====================
-let earningInterval = null;
-let currentEarning = 0;
-
+// ==================== KAZANÇ SİSTEMİ (DÜŞÜK KAZANÇ) ====================
 function startEarning() {
-    if (earningInterval) clearInterval(interval);
+    if (earningInterval) clearInterval(earningInterval);
     
     earningInterval = setInterval(() => {
-        const earningRate = 0.0025;
+        // Dakikada 0.001 - 0.005 arası kazanç (makul seviye)
+        const earningRate = 0.001;
         currentEarning += earningRate;
         
         const banner = document.getElementById("earningBanner");
         const amountSpan = document.getElementById("earningAmount");
+        const messageSpan = document.getElementById("earningMessage");
         
         if (banner && amountSpan) {
+            if (messageSpan) messageSpan.innerHTML = '<i class="fas fa-coins"></i> Oynuyorsun';
             banner.classList.add("active");
             amountSpan.textContent = `+$${currentEarning.toFixed(4)}`;
             
@@ -203,10 +204,18 @@ function startEarning() {
             }, 2000);
         }
         
-        // XP ve bakiye güncelle
+        // Bakiye ve XP güncelle
         userData.balance += earningRate;
-        userData.xp += 1;
+        userData.totalEarned += earningRate;
+        userData.xp += 0.5;
         userData.totalMinutes++;
+        
+        // Level atlama kontrolü
+        const xpNeeded = userData.level * 100;
+        if (userData.xp >= xpNeeded) {
+            userData.xp -= xpNeeded;
+            userData.level++;
+        }
         
         updateUI();
         
@@ -221,7 +230,7 @@ function stopEarning() {
     currentEarning = 0;
 }
 
-// ==================== GÜNLÜK ÖDÜL ====================
+// ==================== GÜNLÜK ÖDÜL (DÜŞÜK KAZANÇ) ====================
 function claimDaily() {
     const today = new Date().toDateString();
     if (userData.lastClaim === today) {
@@ -229,23 +238,21 @@ function claimDaily() {
         return;
     }
     
-    userData.balance += userData.dailyAmount;
+    // Günlük ödül: 0.005 - 0.05 arası
+    let dailyReward = 0.005;
+    if (userData.streak >= 7) dailyReward = 0.05;
+    else if (userData.streak >= 3) dailyReward = 0.02;
+    else if (userData.streak >= 1) dailyReward = 0.01;
+    
+    userData.balance += dailyReward;
+    userData.totalEarned += dailyReward;
     userData.lastClaim = today;
     userData.streak = (userData.streak % 7) + 1;
-    
-    if (userData.streak === 1) {
-        userData.dailyAmount = 2.50;
-    } else if (userData.streak <= 3) {
-        userData.dailyAmount = 3.00;
-    } else if (userData.streak <= 6) {
-        userData.dailyAmount = 5.00;
-    } else {
-        userData.dailyAmount = 10.00;
-    }
+    userData.dailyAmount = dailyReward;
     
     updateUI();
     renderStreak();
-    alert(`🎉 Tebrikler! $${userData.dailyAmount.toFixed(2)} kazandın!`);
+    alert(`🎉 Tebrikler! $${dailyReward.toFixed(4)} kazandın!`);
 }
 
 function renderStreak() {
@@ -267,6 +274,9 @@ function renderStreak() {
             </div>
         `;
     }).join("");
+    
+    const dailyAmountEl = document.getElementById("dailyAmount");
+    if (dailyAmountEl) dailyAmountEl.textContent = userData.dailyAmount.toFixed(4);
 }
 
 // ==================== REFERANS SİSTEMİ ====================
@@ -358,12 +368,16 @@ function renderProfile() {
     const totalMinutesEl = document.getElementById("totalMinutes");
     const profileLevelEl = document.getElementById("profileLevel");
     const profileXpEl = document.getElementById("profileXp");
+    const profileNameEl = document.getElementById("profileName");
+    const profileIdEl = document.getElementById("profileId");
     
-    if (totalEarnedEl) totalEarnedEl.textContent = `$${userData.totalEarned}`;
+    if (totalEarnedEl) totalEarnedEl.textContent = `$${userData.totalEarned.toFixed(4)}`;
     if (totalGamesEl) totalGamesEl.textContent = userData.totalGames;
     if (totalMinutesEl) totalMinutesEl.textContent = userData.totalMinutes;
     if (profileLevelEl) profileLevelEl.textContent = userData.level;
-    if (profileXpEl) profileXpEl.textContent = userData.xp;
+    if (profileXpEl) profileXpEl.textContent = Math.floor(userData.xp);
+    if (profileNameEl) profileNameEl.textContent = userData.name;
+    if (profileIdEl) profileIdEl.textContent = `#${Math.floor(Math.random() * 90000) + 10000}`;
 }
 
 // ==================== AYARLAR ====================
@@ -402,11 +416,11 @@ function openStreakInfo() {
 }
 
 function openBalanceDetails() {
-    alert(`💰 Güncel Bakiye: $${userData.balance.toFixed(2)}\n\nToplam Kazanç: $${userData.totalEarned}\n\nOyun oynayarak kazanmaya devam et!`);
+    alert(`💰 Güncel Bakiye: $${userData.balance.toFixed(4)}\n\nToplam Kazanç: $${userData.totalEarned.toFixed(4)}\n\nOyun oynayarak kazanmaya devam et!`);
 }
 
 function openHelpModal() {
-    alert("📖 Yardım\n\n- Oyun oynayarak XP ve para kazan\n- Her dakika otomatik kazanç\n- Arkadaşlarını davet et, %10 kazan\n- Günlük ödülleri topla\n- Dik mod oyunlar telefon için optimize edilmiştir");
+    alert("📖 Yardım\n\n- Oyun oynayarak XP ve para kazan (dakikada ~$0.001)\n- Günlük ödüller: $0.005 - $0.05\n- Arkadaşlarını davet et, %10 kazan\n- Dik mod oyunlar telefon için optimize edilmiştir");
 }
 
 function shareApp() {
@@ -437,7 +451,7 @@ function initCharts() {
             data: {
                 labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
                 datasets: [{
-                    data: [12, 19, 15, 25, 22, 35, 42],
+                    data: [0.012, 0.019, 0.015, 0.025, 0.022, 0.035, 0.042],
                     borderColor: '#5856D6',
                     backgroundColor: 'rgba(88,86,214,0.1)',
                     fill: true,
@@ -449,7 +463,8 @@ function initCharts() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
+                plugins: { legend: { display: false } },
+                scales: { y: { ticks: { callback: v => '$' + v.toFixed(3) } } }
             }
         });
     }
@@ -460,7 +475,7 @@ function initCharts() {
             data: {
                 labels: ['1.Hf', '2.Hf', '3.Hf', '4.Hf'],
                 datasets: [{
-                    data: [125, 180, 210, 275],
+                    data: [0.125, 0.180, 0.210, 0.275],
                     backgroundColor: 'rgba(88,86,214,0.7)',
                     borderRadius: 8
                 }]
@@ -468,7 +483,8 @@ function initCharts() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
+                plugins: { legend: { display: false } },
+                scales: { y: { ticks: { callback: v => '$' + v.toFixed(3) } } }
             }
         });
     }
@@ -482,15 +498,19 @@ function updateUI() {
     const xpToNextEl = document.getElementById("xpToNextLevel");
     const xpFillEl = document.getElementById("xpFill");
     const referralCountEl = document.getElementById("referralCountDisplay");
-    const dailyAmountEl = document.getElementById("dailyAmount");
+    const earningRateEl = document.getElementById("earningRate");
+    const weeklyTotalEl = document.getElementById("weeklyTotal");
+    const weeklyChangeEl = document.getElementById("weeklyChange");
     
-    if (balanceEl) balanceEl.textContent = userData.balance.toFixed(2);
+    if (balanceEl) balanceEl.textContent = userData.balance.toFixed(4);
     if (userLevelEl) userLevelEl.textContent = userData.level;
-    if (currentXpEl) currentXpEl.textContent = userData.xp;
+    if (currentXpEl) currentXpEl.textContent = Math.floor(userData.xp);
     if (xpToNextEl) xpToNextEl.textContent = userData.level * 100;
     if (xpFillEl) xpFillEl.style.width = `${(userData.xp / (userData.level * 100)) * 100}%`;
     if (referralCountEl) referralCountEl.textContent = userData.referralCount;
-    if (dailyAmountEl) dailyAmountEl.textContent = userData.dailyAmount.toFixed(2);
+    if (earningRateEl) earningRateEl.innerHTML = '<i class="fas fa-clock"></i> $0.001/dk';
+    if (weeklyTotalEl) weeklyTotalEl.textContent = `$${userData.totalEarned.toFixed(4)}`;
+    if (weeklyChangeEl) weeklyChangeEl.innerHTML = '<i class="fas fa-arrow-up"></i> +5%';
 }
 
 // ==================== ONBOARDING ====================
@@ -569,21 +589,6 @@ document.querySelectorAll("[data-frequency]").forEach(btn => {
     });
 });
 
-// ==================== EKRAN YÖNÜ KONTROLÜ ====================
-function checkOrientation() {
-    const warning = document.getElementById("rotateWarning");
-    if (!warning) return;
-    
-    if (window.innerWidth > window.innerHeight) {
-        warning.style.display = "flex";
-    } else {
-        warning.style.display = "none";
-    }
-}
-
-window.addEventListener("resize", checkOrientation);
-window.addEventListener("orientationchange", checkOrientation);
-
 // ==================== BAŞLANGIÇ ====================
 document.addEventListener("DOMContentLoaded", () => {
     renderCategories();
@@ -591,5 +596,4 @@ document.addEventListener("DOMContentLoaded", () => {
     renderStreak();
     initCharts();
     updateUI();
-    checkOrientation();
 });
