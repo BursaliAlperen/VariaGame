@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>VARİA GAME</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #F2F2F7;
+            color: #000;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .app-container {
+            max-width: 428px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #F2F2F7;
+            position: relative;
+        }
+        
+        /* Onboarding */
+        .onboarding-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: #F2F2F7; z-index: 10000;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 20px;
+        }
+        .onboarding-step { display: none; }
+        .onboarding-step.active { display: block; }
+        .onboarding-title {
+            font-size: 2rem; font-weight: 800;
+            background: linear-gradient(135deg, #5856D6, #AF52DE);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .onboarding-desc { color: #8E8E93; margin-bottom: 24px; }
+        .age-options, .genre-grid { display: grid; gap: 10px; margin-bottom: 24px; }
+        .age-options { grid-template-columns: repeat(3, 1fr); }
+        .genre-grid { grid-template-columns: repeat(2, 1fr); }
+        .select-btn {
+            background: white; border: 1.5px solid #E5E5EA; border-radius: 14px;
+            padding: 16px; text-align: center; font-weight: 600; cursor: pointer;
+        }
+        .select-btn i { font-size: 1.8rem; margin-bottom: 6px; display: block; color: #5856D6; }
+        .select-btn.active { border-color: #5856D6; background: #F2F2FF; }
+        .onboarding-btn {
+            background: #5856D6; color: white; border: none;
+            border-radius: 14px; padding: 16px; font-weight: 600;
+            width: 100%; cursor: pointer;
+        }
+        .progress-dots { display: flex; justify-content: center; gap: 6px; margin-top: 20px; }
+        .dot { width: 6px; height: 6px; background: #E5E5EA; border-radius: 3px; }
+        .dot.active { width: 20px; background: #5856D6; }
+        .dot.completed { background: #34C759; }
+        
+        /* Main App */
+        .main-app { display: none; flex-direction: column; height: 100vh; }
+        .main-app.active { display: flex; }
+        
+        /* Header */
+        .apple-header {
+            background: rgba(255,255,255,0.72); backdrop-filter: blur(20px);
+            padding: 10px 14px; flex-shrink: 0;
+            border-bottom: 0.5px solid rgba(60,60,67,0.08);
+        }
+        .header-top { display: flex; align-items: center; justify-content: space-between; }
+        .header-title {
+            font-size: 1.6rem; font-weight: 800;
+            background: linear-gradient(135deg, #5856D6, #AF52DE);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .header-actions { display: flex; gap: 12px; }
+        .header-icon {
+            color: #007AFF; font-size: 1.25rem; cursor: pointer;
+            width: 34px; height: 34px; display: flex; align-items: center;
+            justify-content: center; border-radius: 50%; position: relative;
+        }
+        .badge {
+            position: absolute; top: 2px; right: 2px;
+            width: 9px; height: 9px; background: #FF3B30;
+            border-radius: 50%; border: 2px solid white;
+        }
+        
+        .user-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, #5856D6, #AF52DE);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 600; font-size: 1rem;
+        }
+        .level-badge {
+            background: linear-gradient(135deg, #FF9F0A, #FF6B00);
+            color: white; padding: 4px 10px; border-radius: 16px;
+            font-weight: 700; font-size: 0.8rem;
+        }
+        
+        .xp-container { margin-top: 6px; }
+        .xp-bar { height: 4px; background: #E5E5EA; border-radius: 2px; overflow: hidden; }
+        .xp-fill { height: 100%; background: linear-gradient(90deg, #5856D6, #AF52DE); width: 0%; }
+        .xp-text { display: flex; justify-content: space-between; font-size: 0.65rem; color: #8E8E93; margin-top: 3px; }
+        
+        .balance-row { display: flex; justify-content: space-between; margin-top: 8px; }
+        .balance-card, .ref-card {
+            background: white; padding: 6px 12px; border-radius: 20px;
+            display: flex; align-items: center; gap: 5px; font-size: 0.85rem;
+        }
+        
+        /* Tabs */
+        .tg-tabs {
+            background: rgba(255,255,255,0.72); backdrop-filter: blur(20px);
+            padding: 6px 0 0; flex-shrink: 0;
+        }
+        .tabs-header { display: flex; justify-content: space-between; padding: 0 14px 6px; }
+        .tabs-scroll {
+            display: flex; gap: 4px; overflow-x: auto; padding: 0 14px 6px;
+            scrollbar-width: none;
+        }
+        .tab-item {
+            padding: 6px 14px; font-size: 0.85rem; font-weight: 500;
+            color: #8E8E93; white-space: nowrap; cursor: pointer;
+            border-radius: 20px; border: none; background: transparent;
+        }
+        .tab-item.active { color: #007AFF; background: rgba(0,122,255,0.08); }
+        
+        /* Pages */
+        .page { display: none; flex: 1; overflow: hidden; padding: 8px 14px; }
+        .page.active { display: flex; flex-direction: column; }
+        #gamesPage { overflow-y: auto; }
+        
+        /* Cards */
+        .apple-card {
+            background: white; border-radius: 14px; padding: 12px;
+            margin-bottom: 8px; border: 0.5px solid rgba(60,60,67,0.04);
+        }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .card-header h3 { font-size: 0.95rem; font-weight: 600; }
+        
+        .daily-card { background: linear-gradient(135deg, #5856D6, #AF52DE); }
+        .daily-card .card-header h3 { color: white; }
+        .streak-row { display: flex; justify-content: space-around; margin: 10px 0; }
+        .day-circle {
+            width: 36px; height: 36px; border-radius: 18px;
+            background: rgba(255,255,255,0.2); display: flex;
+            align-items: center; justify-content: center; color: white;
+        }
+        .streak-day.completed .day-circle { background: #34C759; }
+        .streak-day.current .day-circle { background: #FF9F0A; }
+        .claim-btn {
+            background: white; border: none; border-radius: 10px;
+            padding: 10px; font-weight: 600; color: #5856D6;
+            width: 100%; cursor: pointer;
+        }
+        
+        .chart-container { height: 100px; }
+        .chart-stats { display: flex; justify-content: space-between; margin-top: 6px; }
+        .chart-total { font-size: 1.3rem; font-weight: 700; }
+        .chart-change { color: #34C759; }
+        
+        .game-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 8px; margin-top: 4px;
+        }
+        .game-card {
+            background: white; border-radius: 12px; padding: 8px;
+            cursor: pointer; border: 0.5px solid rgba(60,60,67,0.04);
+        }
+        .game-icon {
+            width: 100%; aspect-ratio: 1; border-radius: 10px;
+            background: linear-gradient(135deg, #E8E8ED, #D1D1D6);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 6px;
+        }
+        .game-icon i { font-size: 1.8rem; color: #5856D6; }
+        
+        .game-item {
+            display: flex; align-items: center; padding: 8px 0;
+            border-bottom: 0.5px solid rgba(60,60,67,0.08); cursor: pointer;
+        }
+        .game-item .game-icon { width: 44px; height: 44px; margin-right: 10px; margin-bottom: 0; }
+        .game-content { flex: 1; }
+        .game-name { font-size: 0.9rem; font-weight: 600; }
+        
+        .search-bar {
+            background: #E5E5EA; border-radius: 8px; padding: 6px 10px;
+            display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+        }
+        .search-bar input {
+            background: transparent; border: none; outline: none;
+            font-size: 0.9rem; width: 100%;
+        }
+        
+        /* Bottom Nav */
+        .bottom-nav {
+            background: rgba(255,255,255,0.72); backdrop-filter: blur(20px);
+            padding: 6px 14px 20px; flex-shrink: 0;
+            display: flex; justify-content: space-around;
+            border-top: 0.5px solid rgba(60,60,67,0.08);
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 2px; color: #8E8E93; cursor: pointer;
+            padding: 4px 12px; border-radius: 16px;
+        }
+        .nav-item i { font-size: 1.2rem; }
+        .nav-item.active { color: #007AFF; }
+        
+        /* Autoplay */
+        .autoplay-banner {
+            background: linear-gradient(135deg, #34C759, #30B0C0);
+            border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .autoplay-banner button {
+            background: white; border: none; padding: 6px 14px;
+            border-radius: 16px; font-weight: 600; color: #34C759;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            align-items: flex-end; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; border-radius: 16px 16px 0 0;
+            width: 100%; max-width: 428px; max-height: 70vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 14px; border-bottom: 0.5px solid #E5E5EA;
+            display: flex; justify-content: space-between;
+        }
+        .modal-close {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #F2F2F7; display: flex; align-items: center;
+            justify-content: center; cursor: pointer;
+        }
+        .menu-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; cursor: pointer;
+        }
+        
+        /* Game Modal */
+        .game-modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: black; z-index: 1001;
+        }
+        .game-modal .modal-header {
+            position: absolute; top: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.8); color: white;
+        }
+        #gameIframe { width: 100%; height: 100%; border: none; padding-top: 50px; }
+        
+        /* Earning Banner */
+        .earning-banner {
+            position: fixed; bottom: 80px; left: 14px; right: 14px;
+            max-width: 400px; margin: 0 auto;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            color: white; padding: 10px 14px; border-radius: 24px;
+            display: none; align-items: center; justify-content: space-between;
+            z-index: 500;
+        }
+        .earning-banner.active { display: flex; }
+        
+        .toggle-switch {
+            width: 44px; height: 24px; background: #E5E5EA;
+            border-radius: 24px; position: relative; cursor: pointer;
+        }
+        .toggle-switch.active { background: #34C759; }
+        .toggle-switch::after {
+            content: ''; width: 20px; height: 20px; background: white;
+            border-radius: 50%; position: absolute; top: 2px; left: 2px;
+            transition: left 0.2s;
+        }
+        .toggle-switch.active::after { left: 22px; }
+        
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; text-align: center; margin-bottom: 12px;
+        }
+        .stat-value { font-weight: 700; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <!-- ONBOARDING -->
+    <div class="onboarding-overlay" id="onboarding">
+        <div class="onboarding-step active" data-step="1">
+            <div class="onboarding-title">🎂 Yaşın?</div>
+            <div class="onboarding-desc">Sana uygun oyunları önerelim</div>
+            <div class="age-options">
+                <div class="select-btn" data-age="under18"><i class="fas fa-child"></i>18-</div>
+                <div class="select-btn" data-age="18-24"><i class="fas fa-user"></i>18-24</div>
+                <div class="select-btn" data-age="25plus"><i class="fas fa-user-tie"></i>25+</div>
+            </div>
+            <button class="onboarding-btn" onclick="nextOnboardingStep(2)">Devam →</button>
+            <div class="progress-dots"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+        
+        <div class="onboarding-step" data-step="2">
+            <div class="onboarding-title">🎮 Tercihin?</div>
+            <div class="onboarding-desc">Birden fazla seçebilirsin</div>
+            <div class="genre-grid">
+                <div class="select-btn" data-genre="aksiyon"><i class="fas fa-fist-raised"></i>Aksiyon</div>
+                <div class="select-btn" data-genre="yaris"><i class="fas fa-flag-checkered"></i>Yarış</div>
+                <div class="select-btn" data-genre="bulmaca"><i class="fas fa-puzzle-piece"></i>Bulmaca</div>
+                <div class="select-btn" data-genre="spor"><i class="fas fa-futbol"></i>Spor</div>
+            </div>
+            <button class="onboarding-btn" onclick="nextOnboardingStep(3)">Devam →</button>
+            <div class="progress-dots"><div class="dot completed"></div><div class="dot active"></div><div class="dot"></div></div>
+        </div>
+        
+        <div class="onboarding-step" data-step="3">
+            <div class="onboarding-title">⏰ Sıklık?</div>
+            <div class="onboarding-desc">Günlük ödülleri kaçırma!</div>
+            <div class="age-options">
+                <div class="select-btn" data-frequency="daily"><i class="fas fa-calendar-check"></i>Her gün</div>
+                <div class="select-btn" data-frequency="weekly"><i class="fas fa-calendar-week"></i>Haftada</div>
+                <div class="select-btn" data-frequency="casual"><i class="fas fa-calendar"></i>Ara sıra</div>
+            </div>
+            <button class="onboarding-btn" onclick="completeOnboarding()">🎮 Başla!</button>
+            <div class="progress-dots"><div class="dot completed"></div><div class="dot completed"></div><div class="dot active"></div></div>
+        </div>
+    </div>
+    
+    <!-- ANA UYGULAMA -->
+    <div class="main-app" id="mainApp">
+        <div class="apple-header">
+            <div class="header-top">
+                <div class="header-title">VARİA</div>
+                <div class="header-actions">
+                    <div class="header-icon has-badge" onclick="openModal('notificationsModal')">
+                        <i class="far fa-bell"></i>
+                        <span class="badge" id="notificationBadge" style="display: none;"></span>
+                    </div>
+                    <div class="header-icon" onclick="openModal('menuModal')">
+                        <i class="fas fa-ellipsis"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="user-row">
+                <div class="user-info" onclick="switchPage('profile')">
+                    <div class="user-avatar" id="userAvatar">V</div>
+                    <div class="user-details">
+                        <h3 id="userName" style="font-size:0.9rem;">Varia</h3>
+                        <p id="userUsername" style="font-size:0.7rem;color:#8E8E93;">@varia</p>
+                    </div>
+                </div>
+                <div class="level-badge">
+                    <i class="fas fa-star"></i> Lv.<span id="userLevel">1</span>
+                </div>
+            </div>
+            
+            <div class="xp-container">
+                <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0;"></div></div>
+                <div class="xp-text">
+                    <span><span id="currentXp">0</span>/<span id="xpToNextLevel">100</span> XP</span>
+                    <span id="earningRate">💰 $0.0025/dk</span>
+                </div>
+            </div>
+            
+            <div class="balance-row">
+                <div class="balance-card" onclick="openBalanceDetails()">
+                    <i class="fas fa-dollar-sign" style="color:#FF9F0A;"></i>
+                    <span id="balanceDisplay">0.00</span>
+                </div>
+                <div class="ref-card" onclick="switchPage('referral')">
+                    <i class="fas fa-users" style="color:#5856D6;"></i>
+                    <span id="referralCountDisplay">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tg-tabs">
+            <div class="tabs-header">
+                <h2 id="pageTitle" style="font-size:1.2rem;">Oyunlar</h2>
+                <i class="fas fa-sliders-h header-icon" onclick="openFilterModal()"></i>
+            </div>
+            <div class="tabs-scroll" id="tabsContainer"></div>
+        </div>
+        
+        <!-- HOME PAGE -->
+        <div class="page active" id="homePage">
+            <div class="autoplay-banner">
+                <div>
+                    <h4 style="color:white;font-size:0.9rem;">🚀 Senin İçin Seçtik</h4>
+                    <p id="recommendedGameText" style="color:rgba(255,255,255,0.9);font-size:0.75rem;">Yükleniyor...</p>
+                </div>
+                <button onclick="playRecommendedGame()">OYNA</button>
+            </div>
+            
+            <div class="apple-card daily-card">
+                <div class="card-header">
+                    <h3>🎁 Günlük Ödül</h3>
+                    <span class="card-link" onclick="openStreakInfo()" style="color:white;">→</span>
+                </div>
+                <div class="streak-row" id="streakTracker"></div>
+                <button class="claim-btn" id="claimDailyBtn" onclick="claimDaily()">
+                    <i class="fas fa-gift"></i> $<span id="dailyAmount">2.50</span> Topla
+                </button>
+            </div>
+            
+            <div class="apple-card">
+                <div class="card-header">
+                    <h3>📊 Haftalık</h3>
+                    <span class="card-link" onclick="openStatsModal()">→</span>
+                </div>
+                <div class="chart-container"><canvas id="weeklyChart"></canvas></div>
+                <div class="chart-stats">
+                    <span class="chart-total" id="weeklyTotal">$892</span>
+                    <span class="chart-change" id="weeklyChange">↑ +15%</span>
+                </div>
+            </div>
+            
+            <div class="card-header">
+                <h3>🔥 Öne Çıkan</h3>
+                <span class="card-link" onclick="switchTab('Tümü')">Tümü →</span>
+            </div>
+            <div class="game-grid" id="featuredGames"></div>
+        </div>
+        
+        <!-- GAMES PAGE -->
+        <div class="page" id="gamesPage">
+            <div class="search-bar">
+                <i class="fas fa-search" style="color:#8E8E93;"></i>
+                <input type="text" id="searchInput" placeholder="Oyun ara..." oninput="filterGames()">
+            </div>
+            <div id="allGamesList"></div>
+        </div>
+        
+        <!-- REFERRAL PAGE -->
+        <div class="page" id="referralPage">
+            <div class="apple-card" style="text-align:center;">
+                <i class="fas fa-users" style="font-size:2.5rem;color:#5856D6;"></i>
+                <h2 style="font-size:2rem;background:linear-gradient(135deg,#5856D6,#AF52DE);-webkit-background-clip:text;background-clip:text;color:transparent;">%10</h2>
+                <p style="font-size:0.85rem;">Arkadaşların kazandıkça kazan!</p>
+                <div style="background:#F2F2F7;border-radius:20px;padding:8px 12px;display:flex;justify-content:space-between;margin-top:12px;">
+                    <span id="referralLink" style="font-size:0.8rem;">t.me/VariaGameBot</span>
+                    <i class="fas fa-copy" onclick="copyReferralLink()"></i>
+                </div>
+            </div>
+            
+            <div class="apple-card">
+                <div class="card-header"><h3>👥 Davet Ettiklerin</h3></div>
+                <div id="friendList"></div>
+            </div>
+            
+            <div class="apple-card">
+                <div class="card-header"><h3>🏆 Aşama</h3></div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
+                        <span id="referralCount">0/10</span>
+                        <span style="color:#FF9F0A;">🎁 +$5</span>
+                    </div>
+                    <div style="background:#E5E5EA;height:6px;border-radius:3px;margin-top:6px;">
+                        <div id="referralProgress" style="background:#5856D6;width:0%;height:100%;border-radius:3px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PROFILE PAGE -->
+        <div class="page" id="profilePage">
+            <div class="apple-card">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+                    <div class="user-avatar" style="width:56px;height:56px;" id="profileAvatar">V</div>
+                    <div>
+                        <h3 id="profileName">Varia Oyuncu</h3>
+                        <p id="profileId" style="color:#8E8E93;font-size:0.8rem;">#12345</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div><i class="fas fa-dollar-sign" style="color:#FF9F0A;"></i><div class="stat-value" id="totalEarned">$892</div><small>Toplam</small></div>
+                    <div><i class="fas fa-gamepad" style="color:#5856D6;"></i><div class="stat-value" id="totalGames">47</div><small>Oyun</small></div>
+                    <div><i class="fas fa-clock" style="color:#34C759;"></i><div class="stat-value" id="totalMinutes">0</div><small>Dakika</small></div>
+                </div>
+                
+                <div style="display:flex;justify-content:space-around;margin-bottom:12px;">
+                    <div><i class="fas fa-star"></i> Lv.<span id="profileLevel">1</span></div>
+                    <div><i class="fas fa-trophy"></i> <span id="profileXp">0</span> XP</div>
+                </div>
+            </div>
+            
+            <div class="apple-card">
+                <div class="card-header"><h3>📈 Aylık</h3></div>
+                <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+            </div>
+            
+            <div class="apple-card">
+                <div class="menu-item" onclick="openModal('settingsModal')">
+                    <i class="fas fa-gear"></i><span>Ayarlar</span><i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="menu-item" onclick="openHelpModal()">
+                    <i class="fas fa-circle-question"></i><span>Yardım</span><i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-page="home" onclick="switchPage('home')"><i class="fas fa-house"></i><span>Ana Sayfa</span></div>
+            <div class="nav-item" data-page="games" onclick="switchPage('games')"><i class="fas fa-gamepad"></i><span>Oyunlar</span></div>
+            <div class="nav-item" data-page="referral" onclick="switchPage('referral')"><i class="fas fa-user-group"></i><span>Referans</span></div>
+            <div class="nav-item" data-page="profile" onclick="switchPage('profile')"><i class="fas fa-user"></i><span>Profil</span></div>
+        </div>
+    </div>
+    
+    <!-- Earning Banner -->
+    <div class="earning-banner" id="earningBanner">
+        <span id="earningMessage">💰 Kazanılıyor...</span>
+        <span id="earningAmount">+$0.00</span>
+    </div>
+    
+    <!-- MODALS -->
+    <div class="modal-overlay" id="menuModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Menü</h3><div class="modal-close" onclick="closeModal('menuModal')"><i class="fas fa-times"></i></div></div>
+            <div class="menu-item" onclick="openModal('settingsModal');closeModal('menuModal');"><i class="fas fa-gear"></i><span>Ayarlar</span></div>
+            <div class="menu-item" onclick="openModal('notificationsModal');closeModal('menuModal');"><i class="far fa-bell"></i><span>Bildirimler</span></div>
+            <div class="menu-item" onclick="shareApp()"><i class="fas fa-share"></i><span>Paylaş</span></div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="notificationsModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Bildirimler</h3><div class="modal-close" onclick="closeModal('notificationsModal')"><i class="fas fa-times"></i></div></div>
+            <div id="notificationsList"></div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Ayarlar</h3><div class="modal-close" onclick="closeModal('settingsModal')"><i class="fas fa-times"></i></div></div>
+            <div class="menu-item" onclick="toggleSetting('notifications')"><i class="far fa-bell"></i><span>Bildirimler</span><div class="toggle-switch active" id="toggleNotifications"></div></div>
+            <div class="menu-item" onclick="toggleSetting('sound')"><i class="fas fa-volume-high"></i><span>Ses</span><div class="toggle-switch" id="toggleSound"></div></div>
+            <div class="menu-item" onclick="toggleSetting('vibration')"><i class="fas fa-mobile"></i><span>Titreşim</span><div class="toggle-switch active" id="toggleVibration"></div></div>
+            <div class="menu-item" onclick="toggleSetting('autoPlay')"><i class="fas fa-play"></i><span>Otomatik Oyun</span><div class="toggle-switch active" id="toggleAutoPlay"></div></div>
+        </div>
+    </div>
+    
+    <!-- Game Modal -->
+    <div class="game-modal" id="gameModal">
+        <div class="modal-header">
+            <h3 id="modalGameTitle">Oyun</h3>
+            <button class="modal-close" onclick="closeGameModal()" style="background:transparent;color:white;"><i class="fas fa-times"></i></button>
+        </div>
+        <iframe id="gameIframe" src="" allowfullscreen></iframe>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
