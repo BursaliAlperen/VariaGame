@@ -5,6 +5,7 @@ const admin = require('firebase-admin');
 const cron = require('node-cron');
 const fetch = require('node-fetch');
 
+// Firebase Admin başlat
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -30,6 +31,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
 
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim());
 
+// Frontend config API
 app.get('/api/config', (req, res) => {
   res.json({
     apiKey: process.env.FIREBASE_API_KEY,
@@ -42,11 +44,11 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// Oyun süresi kaydetme
 app.post('/api/play-session', async (req, res) => {
   const { userId, minutes, gameTitle } = req.body;
-  if (!userId || minutes <= 0 || minutes > 240) {
-    return res.status(400).json({ error: 'Geçersiz süre' });
-  }
+  if (!userId || minutes <= 0 || minutes > 240) return res.status(400).json({ error: 'Geçersiz süre' });
+
   try {
     const userRef = db.collection('users').doc(String(userId));
     const userDoc = await userRef.get();
@@ -85,6 +87,7 @@ app.post('/api/play-session', async (req, res) => {
   }
 });
 
+// Referans kaydı
 app.post('/api/referral', async (req, res) => {
   const { newUserId, referrerId } = req.body;
   if (!newUserId || !referrerId || newUserId === referrerId) return res.status(400).json({ error: 'Geçersiz' });
@@ -104,46 +107,32 @@ app.post('/api/referral', async (req, res) => {
   }
 });
 
+// Admin API'leri
 app.get('/api/admin/users', async (req, res) => {
   const { userId } = req.query;
   if (!ADMIN_IDS.includes(userId)) return res.status(403).json({ error: 'Yetkisiz' });
-  try {
-    const snapshot = await db.collection('users').limit(50).get();
-    const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json(users);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  const snapshot = await db.collection('users').limit(50).get();
+  res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
 });
 
 app.post('/api/admin/update-user', async (req, res) => {
   const { adminId, targetUserId, balance, level } = req.body;
   if (!ADMIN_IDS.includes(adminId)) return res.status(403).json({ error: 'Yetkisiz' });
-  try {
-    const updateData = {};
-    if (balance !== undefined) updateData.balance = Number(balance);
-    if (level !== undefined) {
-      updateData.level = Number(level);
-      updateData.xp = Math.pow((level - 1) / 0.1, 2);
-    }
-    await db.collection('users').doc(String(targetUserId)).update(updateData);
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  const update = {};
+  if (balance !== undefined) update.balance = Number(balance);
+  if (level !== undefined) { update.level = Number(level); update.xp = Math.pow((level - 1) / 0.1, 2); }
+  await db.collection('users').doc(String(targetUserId)).update(update);
+  res.json({ success: true });
 });
 
+// Ana sayfa
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
+// Keep-alive (7/24)
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 cron.schedule('*/10 * * * *', async () => {
-  try {
-    await fetch(APP_URL);
-    console.log('Keep-alive ping gönderildi');
-  } catch (e) {
-    console.error('Ping hatası:', e.message);
-  }
+  try { await fetch(APP_URL); console.log('Keep-alive ping'); } catch (e) {}
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Sunucu ${PORT} portunda`));
