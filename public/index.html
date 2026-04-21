@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>VARİA GAME ✦ Play & Earn TON</title>
+  <title>VARIA GAME ✦ Play & Earn TON</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -19,6 +19,7 @@
       --primary-light: #e9e3ff;
       --success: #05cd99;
       --danger: #ff3b30;
+      --warning: #ffb347;
       --shadow: 0 18px 40px rgba(112,144,176,0.12);
     }
     * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color:transparent; }
@@ -27,32 +28,45 @@
     @keyframes pop { 0%{opacity:0;transform:scale(0.9);} 100%{opacity:1;transform:scale(1);} }
     @keyframes slide { 0%{opacity:0;transform:translateY(20px);} 100%{opacity:1;transform:translateY(0);} }
     @keyframes spin { 100%{transform:rotate(360deg);} }
-
-    /* Video Açılış */
+    @keyframes fadeInOut { 0%{opacity:0.3;transform:scale(0.95);} 50%{opacity:1;transform:scale(1.05);} 100%{opacity:0.3;transform:scale(0.95);} }
+    @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,179,71,0.4);} 70%{box-shadow:0 0 0 15px rgba(255,179,71,0);} 100%{box-shadow:0 0 0 0 rgba(255,179,71,0);} }
+    
+    /* Video Container */
     .video-container { position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:10000; display:flex; align-items:center; justify-content:center; }
     .video-container video { width:100%; height:100%; object-fit:cover; }
-    .skip-btn { position:absolute; bottom:30px; right:30px; background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); color:white; padding:12px 24px; border-radius:40px; cursor:pointer; z-index:10001; font-weight:600; }
-    /* Onboarding */
-    .onboarding { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(244,247,254,0.95); backdrop-filter:blur(20px); z-index:9999; display:flex; flex-direction:column; justify-content:center; padding:24px; animation:pop 0.4s; }
-    .onboarding.hidden { display:none; }
-    .onboarding-step { display:none; }
-    .onboarding-step.active { display:block; animation:slide 0.4s; }
-    .onboarding-title { font-size:2.2rem; font-weight:800; margin-bottom:12px; text-align:center; color:var(--primary); }
-    .onboarding-desc { color:var(--muted); margin-bottom:32px; text-align:center; }
+    .skip-btn { position:absolute; bottom:30px; right:30px; background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); color:white; padding:14px 28px; border-radius:40px; cursor:pointer; z-index:10001; font-weight:600; border:none; font-size:16px; }
+    .skip-btn i { margin-left:8px; }
+    
+    /* Splash Screen */
+    .splash-screen { position:fixed; top:0; left:0; right:0; bottom:0; background:#0f0f1a; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s; }
+    .splash-screen.fade-out { opacity:0; pointer-events:none; }
+    .splash-icon { font-size:80px; color:#7aaae0; margin-bottom:20px; animation:fadeInOut 2s infinite alternate; }
+    .splash-text { font-size:28px; font-weight:400; letter-spacing:3px; color:#c0d4f0; border-top:1px solid #2e3a55; padding-top:20px; width:280px; text-align:center; }
+    .splash-text small { display:block; font-size:16px; color:#8fa4cc; margin-top:8px; letter-spacing:6px; }
+    
+    /* Dil Seçimi & Onboarding */
+    .language-selector, .onboarding { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(244,247,254,0.95); backdrop-filter:blur(20px); z-index:9998; display:flex; flex-direction:column; justify-content:center; padding:24px; }
+    .language-selector.hidden, .onboarding.hidden { display:none; }
+    .language-title, .onboarding-title { font-size:2.2rem; font-weight:800; margin-bottom:12px; text-align:center; color:var(--primary); }
+    .language-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:32px 0; }
+    .lang-btn { background:#fff; border:2px solid transparent; border-radius:24px; padding:20px; text-align:center; cursor:pointer; box-shadow:var(--shadow); }
+    .lang-btn i { font-size:2.5rem; margin-bottom:8px; }
+    .lang-btn span { display:block; font-weight:700; margin-top:8px; }
+    .lang-btn.active { border-color:var(--primary); background:var(--primary-light); }
+    .lang-btn.en i { color:#012169; } .lang-btn.tr i { color:#E30A17; } .lang-btn.ru i { color:#0039A6; } .lang-btn.es i { color:#F1BF00; }
+    .onboarding-step { display:none; } .onboarding-step.active { display:block; animation:slide 0.4s; }
     .options-grid { display:grid; gap:14px; margin-bottom:32px; }
-    .options-3 { grid-template-columns:repeat(3,1fr); }
-    .options-2 { grid-template-columns:repeat(2,1fr); }
+    .options-3 { grid-template-columns:repeat(3,1fr); } .options-2 { grid-template-columns:repeat(2,1fr); }
     .select-btn { background:#fff; border:2px solid transparent; border-radius:24px; padding:20px 10px; text-align:center; cursor:pointer; box-shadow:var(--shadow); }
     .select-btn i { font-size:2rem; color:var(--primary); margin-bottom:12px; }
     .select-btn span { font-weight:700; }
     .select-btn.active { border-color:var(--primary); background:var(--primary-light); }
     .onboarding-btn { background:linear-gradient(135deg, var(--primary), #868CFF); color:white; border:none; border-radius:20px; padding:18px; font-weight:700; font-size:1.2rem; width:100%; cursor:pointer; }
-
+    
     /* Ana Uygulama */
-    .db-loading { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .db-loading { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:9997; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .spinner { width:50px; height:50px; border:5px solid var(--primary-light); border-top-color:var(--primary); border-radius:50%; animation:spin 1s infinite; }
-    .main-app { display:none; }
-    .main-app.active { display:block; animation:pop 0.5s; }
+    .main-app { display:none; } .main-app.active { display:block; animation:pop 0.5s; }
     .header { display:flex; justify-content:space-between; margin-bottom:24px; }
     .logo { font-size:2rem; font-weight:900; background:linear-gradient(135deg, var(--primary), #868CFF); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .live-ticker { display:flex; align-items:center; gap:8px; background:#fff; padding:8px 16px; border-radius:20px; box-shadow:var(--shadow); font-weight:700; }
@@ -61,12 +75,18 @@
     .user-card { background:var(--card); backdrop-filter:blur(15px); border-radius:28px; padding:16px; box-shadow:var(--shadow); display:flex; align-items:center; gap:16px; margin-bottom:24px; border:1px solid rgba(255,255,255,0.6); }
     .avatar { width:56px; height:56px; border-radius:28px; background:linear-gradient(135deg, var(--primary), #868CFF); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; color:white; background-size:cover; border:3px solid #fff; }
     .balance { background:#fff; padding:12px 20px; border-radius:40px; margin-left:auto; font-weight:800; color:var(--success); }
-    .varia-banner-container { margin-bottom:20px; }
-    .varia-banner { background:#fff; border-radius:20px; padding:14px; display:flex; align-items:center; gap:12px; cursor:pointer; box-shadow:var(--shadow); border:2px solid #ffb347; }
-    .varia-banner.display { background:#eef2ff; border:1px dashed var(--primary); cursor:default; }
-    .banner-icon { font-size:24px; color:var(--primary); }
-    .banner-text { flex:1; font-weight:700; }
-    .banner-badge { background:var(--primary); color:white; padding:4px 12px; border-radius:30px; font-size:12px; }
+    
+    /* BANNER ALANLARI */
+    .banner-area { margin-bottom:16px; }
+    .click-banner { background:linear-gradient(145deg, #fff5e6, #ffffff); border-radius:20px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; box-shadow:var(--shadow); border:2px solid var(--warning); animation:pulse 2s infinite; }
+    .display-banner { background:#eef2ff; border-radius:20px; padding:14px 16px; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow); border:1px dashed var(--primary); margin-bottom:8px; }
+    .banner-icon { font-size:28px; color:var(--primary); }
+    .banner-content { flex:1; }
+    .banner-title { font-weight:800; font-size:15px; }
+    .banner-desc { font-size:12px; color:var(--muted); }
+    .banner-badge { background:var(--primary); color:white; padding:4px 12px; border-radius:30px; font-size:12px; font-weight:700; }
+    .banner-badge.gold { background:var(--warning); color:#2b3674; }
+    
     .xp-card { margin-bottom:28px; }
     .level-row { display:flex; justify-content:space-between; margin-bottom:8px; }
     .level-badge { background:var(--primary-light); color:var(--primary); padding:6px 16px; border-radius:30px; font-weight:800; }
@@ -85,86 +105,100 @@
     .game-card { background:#fff; border-radius:24px; padding:12px; cursor:pointer; box-shadow:var(--shadow); text-align:center; }
     .game-thumb { aspect-ratio:1; border-radius:16px; overflow:hidden; background:#f4f7fe; margin-bottom:8px; }
     .game-thumb img { width:100%; height:100%; object-fit:cover; }
-    .page { display:none; }
-    .page.active { display:block; animation:slide 0.3s; }
-    .bottom-nav { position:fixed; bottom:0; left:0; right:0; max-width:428px; margin:0 auto; background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); padding:14px 24px; display:flex; justify-content:space-around; border-radius:40px 40px 0 0; box-shadow:0 -10px 30px rgba(0,0,0,0.05); }
+    .page { display:none; } .page.active { display:block; animation:slide 0.3s; }
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; max-width:428px; margin:0 auto; background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); padding:14px 24px; display:flex; justify-content:space-around; border-radius:40px 40px 0 0; box-shadow:0 -10px 30px rgba(0,0,0,0.05); z-index:100; }
     .nav-item { color:var(--muted); cursor:pointer; text-align:center; }
     .nav-item i { font-size:1.5rem; }
     .nav-item.active { color:var(--primary); }
+    
+    /* Modal */
     .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(43,54,116,0.4); backdrop-filter:blur(8px); z-index:1000; align-items:flex-end; }
     .modal.active { display:flex; }
-    .modal-content { background:#fff; border-radius:32px 32px 0 0; width:100%; max-width:428px; padding:32px 24px; animation:slide 0.3s; }
+    .modal-content { background:#fff; border-radius:32px 32px 0 0; width:100%; max-width:428px; padding:32px 24px; animation:slide 0.3s; max-height:90vh; overflow-y:auto; }
     .modal-header { display:flex; justify-content:space-between; margin-bottom:24px; }
-    .close-btn { cursor:pointer; }
+    .close-btn { cursor:pointer; font-size:1.5rem; }
     .task-indicator { width:70px; height:70px; border-radius:35px; background:#e0e5f2; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800; margin:20px auto; }
     .task-indicator.done { background:var(--success); color:white; }
-    .ad-btn { background:var(--primary); color:white; padding:18px; border:none; border-radius:60px; width:100%; font-weight:800; font-size:1.1rem; }
-    .toast { position:fixed; bottom:100px; left:20px; right:20px; max-width:388px; margin:0 auto; background:var(--text); color:white; padding:16px; border-radius:20px; display:none; z-index:200; text-align:center; }
+    .ad-btn { background:var(--primary); color:white; padding:18px; border:none; border-radius:60px; width:100%; font-weight:800; font-size:1.1rem; cursor:pointer; }
+    .toast { position:fixed; bottom:100px; left:20px; right:20px; max-width:388px; margin:0 auto; background:var(--text); color:white; padding:16px; border-radius:20px; display:none; z-index:200; text-align:center; font-weight:600; }
     .toast.show { display:block; animation:slide 0.3s; }
-    /* 2048 Modal İçi */
-    .game-2048-container { padding:70px 16px 30px; max-width:500px; margin:0 auto; height:100vh; display:flex; flex-direction:column; }
-    .grid-2048-wrapper { background:#fff; border-radius:32px; padding:20px; box-shadow:var(--shadow); margin-bottom:24px; }
-    .grid-2048 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; aspect-ratio:1/1; }
-    .cell-2048 { background:#f4f7fe; border-radius:20px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:28px; color:var(--text); box-shadow:inset 0 2px 5px rgba(0,0,0,0.02), 0 6px 0 #d0d7e5; transition:0.1s; }
-    .tile-2{background:#e9e3ff;color:#2b3674}.tile-4{background:#d5cef0}.tile-8{background:#b8a9f0;color:#fff}.tile-16{background:#9f8bef;color:#fff}.tile-32{background:#7e6ae8;color:#fff}.tile-64{background:#5d4ae1;color:#fff}.tile-128{background:#3b2bdb;color:#fff;font-size:24px}.tile-256{background:#2b1fd1;color:#fff;font-size:24px}.tile-512{background:#1f15b3;color:#fff;font-size:24px}.tile-1024{background:#160e8c;color:#fff;font-size:20px}.tile-2048{background:#0e0866;color:#fff;font-size:20px}
-    .cell-2048.new{animation:pop 0.15s}.cell-2048.merge{animation:merge 0.15s}
-    @keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
-    @keyframes merge{0%{transform:scale(1)}50%{transform:scale(1.2);box-shadow:0 0 20px #4318FF}100%{transform:scale(1)}}
-    .btn-2048 { background:#fff; border:none; color:var(--primary); padding:16px 28px; font-size:18px; font-weight:700; border-radius:60px; cursor:pointer; box-shadow:0 8px 0 #d0d7e5; }
-    .btn-2048:active { transform:translateY(4px); box-shadow:0 4px 0 #b0b8cc; }
+    
+    /* Ref Kartı */
+    .ref-card { background:var(--card); backdrop-filter:blur(15px); border-radius:28px; padding:24px; box-shadow:var(--shadow); margin-bottom:24px; text-align:center; }
+    .ref-link-box { background:#f4f7fe; border-radius:16px; padding:14px; margin:20px 0; font-weight:700; word-break:break-all; font-size:0.9rem; border:1px dashed var(--primary); }
+    .ref-actions { display:flex; gap:10px; }
+    .ref-btn { flex:1; background:var(--primary); color:white; border:none; padding:16px; border-radius:16px; font-weight:800; cursor:pointer; }
+    .ref-btn.share { background:var(--success); }
   </style>
 </head>
 <body>
 
 <!-- VİDEO AÇILIŞ -->
 <div class="video-container" id="videoContainer">
-  <video id="loadingVideo" autoplay muted playsinline>
+  <video id="loadingVideo" autoplay muted playsinline preload="auto">
     <source src="loading.mp4" type="video/mp4">
   </video>
-  <div class="skip-btn" onclick="skipVideo()">Geç <i class="fas fa-forward"></i></div>
+  <button class="skip-btn" onclick="skipVideo()">Skip <i class="fas fa-forward"></i></button>
+</div>
+
+<!-- SPLASH SCREEN -->
+<div class="splash-screen" id="splashScreen">
+  <div class="splash-icon"><i class="fas fa-crown"></i></div>
+  <div class="splash-text">POWERED BY<br>VARIA GAMES<small>✦ casual division ✦</small></div>
+</div>
+
+<!-- DİL SEÇİMİ -->
+<div class="language-selector hidden" id="languageSelector">
+  <div class="language-title"><i class="fas fa-globe"></i> Select Language</div>
+  <div class="language-grid">
+    <div class="lang-btn en active" data-lang="en" onclick="selectLanguage('en')"><i class="fas fa-flag-usa"></i><span>English</span></div>
+    <div class="lang-btn tr" data-lang="tr" onclick="selectLanguage('tr')"><i class="fas fa-flag"></i><span>Türkçe</span></div>
+    <div class="lang-btn ru" data-lang="ru" onclick="selectLanguage('ru')"><i class="fas fa-flag"></i><span>Русский</span></div>
+    <div class="lang-btn es" data-lang="es" onclick="selectLanguage('es')"><i class="fas fa-flag"></i><span>Español</span></div>
+  </div>
+  <button class="onboarding-btn" onclick="confirmLanguage()">Continue <i class="fas fa-arrow-right"></i></button>
 </div>
 
 <!-- ONBOARDING -->
 <div class="onboarding hidden" id="onboarding">
   <div class="onboarding-step active" data-step="1">
-    <div class="onboarding-title"><i class="fas fa-cake-candles"></i> Yaşın kaç?</div>
-    <div class="onboarding-desc">Sana uygun oyunları önerelim</div>
+    <div class="onboarding-title"><i class="fas fa-cake-candles"></i> How old are you?</div>
     <div class="options-grid options-3">
       <div class="select-btn" onclick="selectAge('under18')"><i class="fas fa-child"></i><span>18-</span></div>
       <div class="select-btn" onclick="selectAge('18-24')"><i class="fas fa-user"></i><span>18-24</span></div>
       <div class="select-btn" onclick="selectAge('25plus')"><i class="fas fa-user-tie"></i><span>25+</span></div>
     </div>
-    <button class="onboarding-btn" onclick="nextOnboardingStep(2)">Devam Et</button>
+    <button class="onboarding-btn" onclick="nextOnboardingStep(2)">Continue</button>
   </div>
   <div class="onboarding-step" data-step="2">
-    <div class="onboarding-title"><i class="fas fa-gamepad"></i> Hangi oyunlar?</div>
+    <div class="onboarding-title"><i class="fas fa-gamepad"></i> What games do you like?</div>
     <div class="options-grid options-2">
-      <div class="select-btn" onclick="selectGenre('aksiyon')"><i class="fas fa-fist-raised"></i><span>Aksiyon</span></div>
-      <div class="select-btn" onclick="selectGenre('yaris')"><i class="fas fa-flag-checkered"></i><span>Yarış</span></div>
-      <div class="select-btn" onclick="selectGenre('bulmaca')"><i class="fas fa-puzzle-piece"></i><span>Bulmaca</span></div>
-      <div class="select-btn" onclick="selectGenre('spor')"><i class="fas fa-futbol"></i><span>Spor</span></div>
+      <div class="select-btn" onclick="selectGenre('action')"><i class="fas fa-fist-raised"></i><span>Action</span></div>
+      <div class="select-btn" onclick="selectGenre('racing')"><i class="fas fa-flag-checkered"></i><span>Racing</span></div>
+      <div class="select-btn" onclick="selectGenre('puzzle')"><i class="fas fa-puzzle-piece"></i><span>Puzzle</span></div>
+      <div class="select-btn" onclick="selectGenre('sports')"><i class="fas fa-futbol"></i><span>Sports</span></div>
     </div>
-    <button class="onboarding-btn" onclick="nextOnboardingStep(3)">Devam Et</button>
+    <button class="onboarding-btn" onclick="nextOnboardingStep(3)">Continue</button>
   </div>
   <div class="onboarding-step" data-step="3">
-    <div class="onboarding-title"><i class="fas fa-clock"></i> Ne sıklıkla?</div>
+    <div class="onboarding-title"><i class="fas fa-clock"></i> How often do you play?</div>
     <div class="options-grid options-3">
-      <div class="select-btn" onclick="selectFrequency('daily')"><i class="fas fa-calendar-check"></i><span>Her gün</span></div>
-      <div class="select-btn" onclick="selectFrequency('weekly')"><i class="fas fa-calendar-week"></i><span>Haftada</span></div>
-      <div class="select-btn" onclick="selectFrequency('casual')"><i class="fas fa-calendar"></i><span>Ara sıra</span></div>
+      <div class="select-btn" onclick="selectFrequency('daily')"><i class="fas fa-calendar-check"></i><span>Daily</span></div>
+      <div class="select-btn" onclick="selectFrequency('weekly')"><i class="fas fa-calendar-week"></i><span>Weekly</span></div>
+      <div class="select-btn" onclick="selectFrequency('casual')"><i class="fas fa-calendar"></i><span>Casual</span></div>
     </div>
-    <button class="onboarding-btn" onclick="completeOnboarding()">Başla</button>
+    <button class="onboarding-btn" onclick="completeOnboarding()">Start</button>
   </div>
 </div>
 
-<!-- YÜKLENİYOR (Firebase) -->
-<div class="db-loading" id="dbLoading"><div class="spinner"></div><h3>Bağlanıyor...</h3></div>
+<!-- YÜKLENİYOR -->
+<div class="db-loading" id="dbLoading"><div class="spinner"></div><h3>Connecting...</h3></div>
 
 <!-- ANA UYGULAMA -->
 <div class="main-app" id="mainApp">
   <div class="app">
     <div class="header">
-      <div class="logo">VARİA</div>
+      <div class="logo">VARIA</div>
       <div class="live-ticker"><span class="live-dot"></span>TON: $<span id="tonPrice">...</span></div>
     </div>
     <div class="user-card">
@@ -172,48 +206,80 @@
       <div><h3 id="userName">...</h3><p id="userUsername">@...</p></div>
       <div class="balance">$<span id="balance">0.00</span></div>
     </div>
-    <div class="varia-banner-container" id="bannerContainer"></div>
+    
+    <!-- ===== BANNER ALANLARI ===== -->
+    <div class="banner-area">
+      <!-- Display Banner (Gösterim) -->
+      <div class="display-banner" id="displayBanner">
+        <i class="fas fa-ad banner-icon"></i>
+        <div class="banner-content">
+          <div class="banner-title">Your Ad Here</div>
+          <div class="banner-desc">Display Banner • 320x50</div>
+        </div>
+      </div>
+      
+      <!-- Click Banner (Tıklamalı Ödüllü) -->
+      <div class="click-banner" id="clickBanner" onclick="onBannerClick()">
+        <i class="fas fa-gift banner-icon" style="color:var(--warning);"></i>
+        <div class="banner-content">
+          <div class="banner-title">🎁 Claim Your Reward!</div>
+          <div class="banner-desc">Click to earn <span id="bannerReward">$0.010</span></div>
+        </div>
+        <div class="banner-badge gold" id="bannerCooldown">READY</div>
+      </div>
+    </div>
+    
     <div class="xp-card">
-      <div class="level-row"><span class="level-badge"><i class="fas fa-star"></i> Lv.<span id="level">1</span></span><span id="earningRate">$0.002/dk</span></div>
+      <div class="level-row"><span class="level-badge"><i class="fas fa-star"></i> Lv.<span id="level">1</span></span><span id="earningRate">$0.002/min</span></div>
       <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
       <div style="text-align:right; font-size:0.8rem; margin-top:4px;"><span id="xp">0</span>/<span id="xpNext">100</span> XP</div>
     </div>
+    
     <!-- Sayfalar -->
     <div class="page active" id="homePage">
       <div class="daily-card">
-        <div style="display:flex; justify-content:space-between;"><span><i class="fas fa-gift"></i> Günlük</span><span><i class="fas fa-fire"></i> <span id="streak">0</span> gün</span></div>
+        <div style="display:flex; justify-content:space-between;"><span><i class="fas fa-gift"></i> Daily Reward</span><span><i class="fas fa-fire"></i> <span id="streak">0</span> days</span></div>
         <div class="streak" id="streakDays"></div>
-        <button class="claim-btn" id="claimBtn" onclick="claimDaily()">$<span id="dailyReward">0.005</span> TOPLA</button>
+        <button class="claim-btn" id="claimBtn" onclick="claimDaily()">$<span id="dailyReward">0.005</span> CLAIM</button>
       </div>
-      <div class="section-header"><h3>Popüler Oyunlar</h3><span onclick="switchPage('games')">Tümü <i class="fas fa-arrow-right"></i></span></div>
+      <div class="section-header"><h3>Popular Games</h3><span onclick="switchPage('games')">See All <i class="fas fa-arrow-right"></i></span></div>
       <div class="game-grid" id="featuredGames"></div>
     </div>
+    
     <div class="page" id="gamesPage">
-      <div style="background:#fff; border-radius:20px; padding:16px; margin-bottom:16px;"><i class="fas fa-search"></i> <input type="text" id="search" placeholder="Oyun ara..." style="border:none; outline:none; width:90%;"></div>
+      <div style="background:#fff; border-radius:20px; padding:16px; margin-bottom:16px;"><i class="fas fa-search"></i> <input type="text" id="search" placeholder="Search games..." style="border:none; outline:none; width:90%;"></div>
       <div id="gamesList"></div>
     </div>
+    
     <div class="page" id="referralPage">
-      <div class="daily-card" style="text-align:center;">
+      <div class="ref-card">
         <i class="fas fa-users" style="font-size:3rem; color:var(--primary);"></i>
-        <h3>Arkadaşlarını Davet Et</h3>
-        <p>Her davet +$0.15!</p>
-        <div style="background:#f4f7fe; border-radius:16px; padding:14px; margin:20px 0;" id="refLink">t.me/VariaGAME_bot</div>
-        <div style="display:flex; gap:10px;"><button onclick="copyRef()" style="flex:1; background:var(--primary); color:white; padding:16px; border:none; border-radius:16px;"><i class="fas fa-copy"></i> Kopyala</button><button onclick="shareRef()" style="flex:1; background:var(--success); color:white; padding:16px; border:none; border-radius:16px;"><i class="fas fa-share"></i> Paylaş</button></div>
+        <h3 style="margin:16px 0 8px;">Invite Friends</h3>
+        <p style="color:var(--muted); margin-bottom:16px;">Earn <strong style="color:var(--success);">+$0.15</strong> for each friend!</p>
+        <div class="ref-link-box" id="refLink">t.me/VariaGAME_bot</div>
+        <div class="ref-actions">
+          <button class="ref-btn" onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy</button>
+          <button class="ref-btn share" onclick="shareReferralLink()"><i class="fas fa-share"></i> Share</button>
+        </div>
       </div>
-      <div style="display:flex; gap:12px; margin:20px 0;"><div class="stat-card"><i class="fas fa-user-plus"></i> <span id="refCount">0</span> Davet</div><div class="stat-card"><i class="fas fa-dollar-sign"></i> $<span id="refEarned">0.00</span></div></div>
+      <div style="display:flex; gap:12px; margin-bottom:20px;">
+        <div style="flex:1; background:var(--card); border-radius:20px; padding:16px; text-align:center;"><i class="fas fa-user-plus"></i><div style="font-weight:800;" id="refCount">0</div><div style="color:var(--muted);">Invites</div></div>
+        <div style="flex:1; background:var(--card); border-radius:20px; padding:16px; text-align:center;"><i class="fas fa-dollar-sign" style="color:var(--success);"></i><div style="font-weight:800; color:var(--success);">$<span id="refEarned">0.00</span></div><div style="color:var(--muted);">Earned</div></div>
+      </div>
       <div id="refHistory"></div>
     </div>
+    
     <div class="page" id="profilePage">
       <div class="daily-card">
-        <h4><i class="fas fa-ticket-alt"></i> Promo Kod</h4>
-        <div style="display:flex; gap:10px; margin-top:10px;"><input id="promoInput" placeholder="Kod" style="flex:1; padding:14px; border-radius:16px; border:2px solid #e0e5f2;"><button onclick="applyPromo()" style="background:var(--primary); color:white; border:none; padding:0 20px; border-radius:16px;">Uygula</button></div>
+        <h4><i class="fas fa-ticket-alt"></i> Promo Code</h4>
+        <div style="display:flex; gap:10px; margin-top:10px;"><input id="promoInput" placeholder="Enter code" style="flex:1; padding:14px; border-radius:16px; border:2px solid #e0e5f2;"><button onclick="applyPromo()" style="background:var(--primary); color:white; border:none; padding:0 20px; border-radius:16px;">Apply</button></div>
       </div>
       <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
         <div class="stat-card"><i class="fas fa-chart-line"></i> $<span id="totalEarned">0.00</span></div>
         <div class="stat-card"><i class="fas fa-gamepad"></i> <span id="gamesPlayed">0</span></div>
-        <div class="stat-card"><i class="fas fa-clock"></i> <span id="totalMinutes">0</span>dk</div>
+        <div class="stat-card"><i class="fas fa-clock"></i> <span id="totalMinutes">0</span>m</div>
       </div>
-      <button onclick="openTonModal()" style="background:#0088cc; color:white; border:none; border-radius:20px; padding:20px; width:100%; margin-top:24px;"><i class="fab fa-telegram"></i> TON Çek</button>
+      <button onclick="openTonModal()" style="background:#0088cc; color:white; border:none; border-radius:20px; padding:20px; width:100%; margin-top:24px;"><i class="fab fa-telegram"></i> Withdraw TON</button>
     </div>
   </div>
   <div class="bottom-nav">
@@ -224,28 +290,35 @@
   </div>
 </div>
 
-<!-- 2048 Oyun Modalı -->
-<div class="modal" id="gameModal">
-  <div class="modal-content" style="padding:0; background:transparent; box-shadow:none;">
-    <div style="background:#fff; border-radius:32px 32px 0 0; padding:16px 24px; display:flex; justify-content:space-between; align-items:center;">
-      <h3>2048 · Varia Edition</h3>
-      <button onclick="closeGameModal()" style="background:var(--danger); border:none; padding:10px 20px; border-radius:20px; color:white; font-weight:800;"><i class="fas fa-times"></i> Çıkış</button>
-    </div>
-    <div id="game2048Container" class="game-2048-container" style="background:var(--bg);"></div>
+<!-- REKLAM GÖREV MODALI -->
+<div class="modal" id="adModal">
+  <div class="modal-content">
+    <div class="modal-header"><h3><i class="fas fa-ad"></i> Watch Ad to Play</h3><span class="close-btn" onclick="closeModal('adModal')">&times;</span></div>
+    <p style="text-align:center;">Complete the task to open the game</p>
+    <div class="task-indicator" id="taskIndicator">0/1</div>
+    <button class="ad-btn" onclick="completeAdTask()"><i class="fas fa-play"></i> Watch Ad</button>
+    <p style="text-align:center; margin-top:16px; cursor:pointer;" onclick="closeModal('adModal')">Cancel</p>
   </div>
 </div>
 
-<!-- Reklam Görev Modalı -->
-<div class="modal" id="adModal"><div class="modal-content"><div class="modal-header"><h3>Reklam Görevi</h3><span class="close-btn" onclick="closeModal('adModal')">&times;</span></div><p>Oyunu açmak için reklamı izleyin</p><div class="task-indicator" id="taskIndicator">0/1</div><button class="ad-btn" id="watchAdBtn" onclick="completeAdTask()"><i class="fas fa-play"></i> Reklamı İzle</button><p style="text-align:center; margin-top:16px; cursor:pointer;" onclick="closeModal('adModal')">Vazgeç</p></div></div>
-<!-- TON Çekim Modalı -->
-<div class="modal" id="tonModal"><div class="modal-content"><div class="modal-header"><h3>TON Çekimi</h3><span class="close-btn" onclick="closeModal('tonModal')">&times;</span></div><p>Bakiye: $<span id="tonBalance">0.00</span></p><p>1 TON ≈ $<span id="liveTon">...</span></p><input id="tonAddress" placeholder="UQ... cüzdan adresi" style="width:100%; padding:16px; border-radius:16px; border:2px solid #e0e5f2; margin:16px 0;"><button onclick="requestTonCashout()" style="background:#0088cc; color:white; padding:16px; width:100%; border:none; border-radius:16px;">Talep Gönder</button></div></div>
+<!-- TON ÇEKİM MODALI -->
+<div class="modal" id="tonModal">
+  <div class="modal-content">
+    <div class="modal-header"><h3>Withdraw TON</h3><span class="close-btn" onclick="closeModal('tonModal')">&times;</span></div>
+    <p>Balance: $<span id="tonBalance">0.00</span></p>
+    <p>1 TON ≈ $<span id="liveTon">...</span></p>
+    <input id="tonAddress" placeholder="UQ... wallet address" style="width:100%; padding:16px; border-radius:16px; border:2px solid #e0e5f2; margin:16px 0;">
+    <button onclick="requestTonCashout()" style="background:#0088cc; color:white; padding:16px; width:100%; border:none; border-radius:16px;">Request Withdrawal</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  // ======================= GLOBAL DEĞİŞKENLER =======================
   const tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
-  let db, userData, userId;
+  
+  let db, userData, userId, bannerCooldown = false, cooldownTimer = 60000, lastBannerClick = 0;
   const firebaseConfig = {
     apiKey: "AIzaSyATlWEp-GRv37SP2nPeeXLrYun8MG5KvLk",
     authDomain: "variagame-79b3d.firebaseapp.com",
@@ -254,186 +327,179 @@
     messagingSenderId: "661347349467",
     appId: "1:661347349467:web:15237c4e8fecf15ac32dfe"
   };
+  
+  let currentLanguage = 'en';
   let onboardingData = { age: null, genres: [], frequency: null };
   
-  // ======================= VIDEO & ONBOARDING =======================
+  // ===== VİDEO =====
   const video = document.getElementById('loadingVideo');
   const videoContainer = document.getElementById('videoContainer');
+  const splashScreen = document.getElementById('splashScreen');
+  const languageSelector = document.getElementById('languageSelector');
   const onboarding = document.getElementById('onboarding');
   
-  video.addEventListener('ended', () => { videoContainer.style.display='none'; onboarding.classList.remove('hidden'); });
-  video.addEventListener('error', () => { videoContainer.style.display='none'; onboarding.classList.remove('hidden'); });
-  window.skipVideo = () => { video.pause(); videoContainer.style.display='none'; onboarding.classList.remove('hidden'); };
+  video.addEventListener('loadeddata', () => console.log('✅ Video yüklendi'));
+  video.addEventListener('error', () => { videoContainer.style.display = 'none'; splashScreen.classList.add('fade-out'); setTimeout(() => { splashScreen.style.display = 'none'; languageSelector.classList.remove('hidden'); }, 800); });
+  video.addEventListener('ended', () => { videoContainer.style.display = 'none'; splashScreen.classList.add('fade-out'); setTimeout(() => { splashScreen.style.display = 'none'; languageSelector.classList.remove('hidden'); }, 800); });
   
-  window.selectAge = (a) => { document.querySelectorAll('[data-step="1"] .select-btn').forEach(b=>b.classList.remove('active')); event.currentTarget.classList.add('active'); onboardingData.age = a; };
-  window.selectGenre = (g) => { event.currentTarget.classList.toggle('active'); if(event.currentTarget.classList.contains('active')) onboardingData.genres.push(g); else onboardingData.genres = onboardingData.genres.filter(x=>x!==g); };
-  window.selectFrequency = (f) => { document.querySelectorAll('[data-step="3"] .select-btn').forEach(b=>b.classList.remove('active')); event.currentTarget.classList.add('active'); onboardingData.frequency = f; };
-  window.nextOnboardingStep = (s) => { document.querySelectorAll('.onboarding-step').forEach(e=>e.classList.remove('active')); document.querySelector(`[data-step="${s}"]`).classList.add('active'); };
+  window.skipVideo = () => { video.pause(); videoContainer.style.display = 'none'; splashScreen.classList.add('fade-out'); setTimeout(() => { splashScreen.style.display = 'none'; languageSelector.classList.remove('hidden'); }, 500); };
+  
+  // ===== DİL =====
+  window.selectLanguage = (lang) => { document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active')); document.querySelector(`[data-lang="${lang}"]`).classList.add('active'); currentLanguage = lang; };
+  window.confirmLanguage = () => { languageSelector.classList.add('hidden'); onboarding.classList.remove('hidden'); };
+  
+  // ===== ONBOARDING =====
+  window.selectAge = (a) => { document.querySelectorAll('[data-step="1"] .select-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); onboardingData.age = a; };
+  window.selectGenre = (g) => { event.currentTarget.classList.toggle('active'); if(event.currentTarget.classList.contains('active')) onboardingData.genres.push(g); else onboardingData.genres = onboardingData.genres.filter(x => x!==g); };
+  window.selectFrequency = (f) => { document.querySelectorAll('[data-step="3"] .select-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); onboardingData.frequency = f; };
+  window.nextOnboardingStep = (s) => { document.querySelectorAll('.onboarding-step').forEach(e => e.classList.remove('active')); document.querySelector(`[data-step="${s}"]`).classList.add('active'); };
   window.completeOnboarding = () => { onboarding.classList.add('hidden'); initApp(); };
   
-  // ======================= ANA UYGULAMA BAŞLATMA =======================
+  // ===== ANA UYGULAMA =====
   async function initApp() {
     document.getElementById('dbLoading').style.display = 'flex';
     try {
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
       userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : 'demo_' + Date.now();
+      
       const userRef = db.collection('users').doc(userId);
       const docSnap = await userRef.get();
+      
       if (!docSnap.exists) {
-        userData = { balance: 0.0, streak: 0, lastClaim: null, gamesPlayed: 0, totalEarned: 0, totalMinutes: 0, xp: 0, level: 1, joinedTelegram: false, referralCount: 0, referralEarnings: 0, todayPlayed: 0 };
+        userData = { balance: 5.0, streak: 0, lastClaim: null, gamesPlayed: 0, totalEarned: 5.0, totalMinutes: 0, xp: 0, level: 1, refCode: generateCode(), referralCount: 0, referralEarnings: 0 };
         await userRef.set(userData);
-        const refParam = tg.initDataUnsafe?.start_param;
-        if (refParam && refParam !== userId) {
-          await db.collection('referrals').add({ referrerId: refParam, referredId: userId, referredName: tg.initDataUnsafe?.user?.first_name || 'Oyuncu', bonusEarned: 0.15, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-          await db.collection('users').doc(refParam).update({ balance: firebase.firestore.FieldValue.increment(0.15), totalEarned: firebase.firestore.FieldValue.increment(0.15), referralCount: firebase.firestore.FieldValue.increment(1), referralEarnings: firebase.firestore.FieldValue.increment(0.15) });
-        }
       } else userData = docSnap.data();
       
-      userRef.onSnapshot(snap => { if (snap.exists) { userData = snap.data(); updateUI(); } });
+      userRef.onSnapshot(snap => { if(snap.exists) { userData = snap.data(); updateUI(); } });
       
       updateUI();
       loadGames();
-      VariaSDK.showClickableBanner();
       document.getElementById('dbLoading').style.display = 'none';
       document.getElementById('mainApp').classList.add('active');
       setInterval(fetchTonPrice, 5000); fetchTonPrice();
-    } catch (e) {
-      document.getElementById('dbLoading').innerHTML = '<h3>Bağlantı hatası</h3>';
+    } catch(e) {
+      console.error('Init error:', e);
+      useLocalStorage();
+      document.getElementById('dbLoading').style.display = 'none';
+      document.getElementById('mainApp').classList.add('active');
     }
   }
   
-  // ======================= UI GÜNCELLEME =======================
+  function useLocalStorage() {
+    const saved = localStorage.getItem('variaUser');
+    userData = saved ? JSON.parse(saved) : { balance: 5.0, streak: 0, lastClaim: null, gamesPlayed: 0, totalEarned: 5.0, totalMinutes: 0, xp: 0, level: 1, referralCount: 0, referralEarnings: 0 };
+    setInterval(() => localStorage.setItem('variaUser', JSON.stringify(userData)), 2000);
+  }
+  
+  function generateCode() { return Math.random().toString(36).substring(2, 10).toUpperCase(); }
+  
   function updateUI() {
-    document.getElementById('balance').textContent = userData.balance.toFixed(2);
-    document.getElementById('totalEarned').textContent = userData.totalEarned.toFixed(2);
+    document.getElementById('balance').textContent = (userData.balance || 0).toFixed(2);
+    document.getElementById('totalEarned').textContent = (userData.totalEarned || 0).toFixed(2);
     document.getElementById('gamesPlayed').textContent = userData.gamesPlayed || 0;
     document.getElementById('totalMinutes').textContent = Math.floor(userData.totalMinutes || 0);
     document.getElementById('level').textContent = userData.level || 1;
     document.getElementById('streak').textContent = userData.streak || 0;
     document.getElementById('refCount').textContent = userData.referralCount || 0;
     document.getElementById('refEarned').textContent = (userData.referralEarnings || 0).toFixed(2);
-    let xpNext = Math.pow(((userData.level || 1)) / 0.1, 2);
-    document.getElementById('xp').textContent = userData.xp || 0;
-    document.getElementById('xpNext').textContent = Math.floor(xpNext);
-    document.getElementById('xpFill').style.width = Math.min(((userData.xp || 0) / xpNext) * 100, 100) + '%';
-    document.getElementById('userName').textContent = tg.initDataUnsafe?.user?.first_name || 'Oyuncu';
-    document.getElementById('userUsername').textContent = tg.initDataUnsafe?.user?.username ? '@' + tg.initDataUnsafe.user.username : '';
-    if (tg.initDataUnsafe?.user?.photo_url) document.getElementById('avatar').style.backgroundImage = `url(${tg.initDataUnsafe.user.photo_url})`;
-    else document.getElementById('avatar').textContent = (tg.initDataUnsafe?.user?.first_name || 'V').charAt(0);
+    document.getElementById('userName').textContent = tg.initDataUnsafe?.user?.first_name || 'Player';
+    document.getElementById('userUsername').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : '';
     document.getElementById('refLink').textContent = `t.me/VariaGAME_bot?startapp=${userId}`;
     renderStreak();
+    updateBannerUI();
   }
   
   function renderStreak() {
-    let days = ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'], html = '', today = new Date().toISOString().split('T')[0];
-    for (let i = 0; i < 7; i++) {
+    let days = ['M','T','W','T','F','S','S'], html = '', today = new Date().toISOString().split('T')[0];
+    for (let i=0; i<7; i++) {
       let cls = 'day';
-      if (i < userData.streak) cls = 'day done';
-      if (i === userData.streak && userData.lastClaim !== today) cls = 'day current';
+      if (i < (userData.streak||0)) cls = 'day done';
+      if (i === (userData.streak||0) && userData.lastClaim !== today) cls = 'day current';
       html += `<div class="${cls}">${days[i]}</div>`;
     }
     document.getElementById('streakDays').innerHTML = html;
   }
   
+  function updateBannerUI() {
+    const now = Date.now();
+    const cooldownRemaining = Math.max(0, lastBannerClick + cooldownTimer - now);
+    if (cooldownRemaining > 0) {
+      document.getElementById('clickBanner').style.opacity = '0.6';
+      document.getElementById('bannerCooldown').textContent = Math.ceil(cooldownRemaining/1000) + 's';
+    } else {
+      document.getElementById('clickBanner').style.opacity = '1';
+      document.getElementById('bannerCooldown').textContent = 'READY';
+    }
+  }
+  
+  window.onBannerClick = () => {
+    const now = Date.now();
+    if (now - lastBannerClick < cooldownTimer) {
+      showToast('⏳ Please wait ' + Math.ceil((lastBannerClick + cooldownTimer - now)/1000) + 's', true);
+      return;
+    }
+    lastBannerClick = now;
+    const reward = 0.01;
+    userData.balance = (userData.balance || 0) + reward;
+    userData.totalEarned = (userData.totalEarned || 0) + reward;
+    updateUI();
+    showToast(`🎉 +$${reward.toFixed(3)} earned!`);
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    updateBannerUI();
+    setTimeout(updateBannerUI, 1000);
+  };
+  
   async function claimDaily() {
     let today = new Date().toISOString().split('T')[0];
-    if (userData.lastClaim === today) return toast('Zaten aldınız', true);
-    userData.streak = (userData.lastClaim === new Date(Date.now() - 86400000).toISOString().split('T')[0]) ? Math.min(userData.streak + 1, 7) : 1;
+    if (userData.lastClaim === today) return showToast('Already claimed!', true);
+    userData.streak = (userData.lastClaim === new Date(Date.now()-86400000).toISOString().split('T')[0]) ? Math.min((userData.streak||0)+1, 7) : 1;
     userData.lastClaim = today;
-    userData.balance += 0.005; userData.totalEarned += 0.005;
-    await db.collection('users').doc(userId).update({ streak: userData.streak, lastClaim: today, balance: firebase.firestore.FieldValue.increment(0.005), totalEarned: firebase.firestore.FieldValue.increment(0.005) });
-    toast('+$0.005 Günlük Ödül!'); updateUI();
+    userData.balance = (userData.balance || 0) + 0.005;
+    userData.totalEarned = (userData.totalEarned || 0) + 0.005;
+    updateUI();
+    showToast('✅ +$0.005 Daily Reward!');
+    if (db) await db.collection('users').doc(userId).update({ streak: userData.streak, lastClaim: today, balance: userData.balance, totalEarned: userData.totalEarned });
   }
   
   function loadGames() {
     let games = [{ ad: '2048', embed: '2048', resim: '2048.png' }];
-    let html = games.map(g => `<div class="game-card" onclick="VariaSDK.showAdTask('${g.embed}')"><div class="game-thumb"><img src="${g.resim}"></div><h4>${g.ad}</h4></div>`).join('');
+    let html = games.map(g => `<div class="game-card" onclick="showAdTask('${g.embed}')"><div class="game-thumb"><img src="${g.resim}"></div><h4>${g.ad}</h4></div>`).join('');
     document.getElementById('featuredGames').innerHTML = html;
     document.getElementById('gamesList').innerHTML = html;
   }
   
-  function switchPage(p) {
-    document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
-    document.getElementById(p + 'Page').classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelector(`[data-page="${p}"]`).classList.add('active');
-  }
+  window.showAdTask = (gameId) => {
+    document.getElementById('taskIndicator').className = 'task-indicator';
+    document.getElementById('taskIndicator').textContent = '0/1';
+    document.getElementById('adModal').classList.add('active');
+    window.pendingGame = gameId;
+  };
   
+  window.completeAdTask = () => {
+    document.getElementById('taskIndicator').className = 'task-indicator done';
+    document.getElementById('taskIndicator').textContent = '1/1';
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    setTimeout(() => {
+      closeModal('adModal');
+      if (window.pendingGame === '2048') window.location.href = '2048.html';
+    }, 500);
+  };
+  
+  function switchPage(p) { document.querySelectorAll('.page').forEach(e => e.classList.remove('active')); document.getElementById(p+'Page').classList.add('active'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.querySelector(`[data-page="${p}"]`).classList.add('active'); }
   function openModal(id) { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-  function toast(msg, err) { let t = document.getElementById('toast'); t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--success)'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-  function copyRef() { navigator.clipboard?.writeText('https://t.me/VariaGAME_bot?startapp=' + userId); toast('Link kopyalandı'); }
-  function shareRef() { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/VariaGAME_bot?startapp=' + userId)}&text=Oyna kazan!`); }
-  async function fetchTonPrice() { try { let r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TONUSDT'); let d = await r.json(); document.getElementById('tonPrice').textContent = parseFloat(d.price).toFixed(2); document.getElementById('liveTon').textContent = parseFloat(d.price).toFixed(2); } catch (e) {} }
-  function openTonModal() { document.getElementById('tonBalance').textContent = userData.balance.toFixed(2); openModal('tonModal'); }
-  function requestTonCashout() { let addr = document.getElementById('tonAddress').value; if (!addr.startsWith('UQ')) return toast('Geçerli TON adresi girin', true); toast('Çekim talebi alındı'); closeModal('tonModal'); }
-  function applyPromo() { toast('Promo kod geçersiz', true); }
-
-  // ======================= VARIA SDK =======================
-  const VariaSDK = {
-    lastClick: 0, cooldown: 60000, reward: 0.01, gameId: null,
-    showClickableBanner: function () {
-      let c = document.getElementById('bannerContainer'), now = Date.now();
-      if (now - this.lastClick < this.cooldown) c.innerHTML = `<div class="varia-banner display"><i class="fas fa-hourglass-half banner-icon"></i><span class="banner-text">Bekleyin...</span></div>`;
-      else c.innerHTML = `<div class="varia-banner" onclick="VariaSDK.onBannerClick()"><i class="fas fa-mouse-pointer banner-icon"></i><span class="banner-text">Reklama tıkla +$${this.reward.toFixed(3)}</span><span class="banner-badge">ÖDÜL</span></div>`;
-    },
-    onBannerClick: function () {
-      let now = Date.now(); if (now - this.lastClick < this.cooldown) return toast('Biraz bekleyin', true);
-      this.lastClick = now;
-      userData.balance += this.reward; userData.totalEarned += this.reward;
-      db.collection('users').doc(userId).update({ balance: firebase.firestore.FieldValue.increment(this.reward), totalEarned: firebase.firestore.FieldValue.increment(this.reward) });
-      toast(`+$${this.reward.toFixed(3)}`); this.showClickableBanner();
-    },
-    showAdTask: function (gameId) { this.gameId = gameId; document.getElementById('taskIndicator').className = 'task-indicator'; document.getElementById('taskIndicator').textContent = '0/1'; openModal('adModal'); },
-    completeAdTask: function () { document.getElementById('taskIndicator').className = 'task-indicator done'; document.getElementById('taskIndicator').textContent = '1/1'; setTimeout(() => { closeModal('adModal'); if (this.gameId === '2048') open2048Game(); }, 500); }
-  };
-  window.VariaSDK = VariaSDK;
-  window.completeAdTask = () => VariaSDK.completeAdTask();
+  function showToast(msg, err) { let t = document.getElementById('toast'); t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--success)'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+  async function fetchTonPrice() { try { let r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TONUSDT'); let d = await r.json(); document.getElementById('tonPrice').textContent = parseFloat(d.price).toFixed(2); document.getElementById('liveTon').textContent = parseFloat(d.price).toFixed(2); } catch(e) {} }
+  window.openTonModal = () => { document.getElementById('tonBalance').textContent = (userData.balance||0).toFixed(2); openModal('tonModal'); };
+  window.requestTonCashout = () => { let addr = document.getElementById('tonAddress').value; if (!addr.startsWith('UQ')) return showToast('Invalid TON address!', true); showToast('✅ Withdrawal requested!'); closeModal('tonModal'); };
+  window.copyReferralLink = () => { navigator.clipboard?.writeText('https://t.me/VariaGAME_bot?startapp='+userId); showToast('✅ Link copied!'); };
+  window.shareReferralLink = () => { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/VariaGAME_bot?startapp='+userId)}&text=Play and earn TON!`); };
+  window.applyPromo = () => showToast('Invalid promo code', true);
   
-  // ======================= 2048 OYUNU (GÖMÜLÜ) =======================
-  let board2048, score2048, best2048, size2048 = 4, mergedPositions = new Set(), newTilePositions = new Set(), gameActive = false;
-  function open2048Game() {
-    const container = document.getElementById('game2048Container');
-    container.innerHTML = `
-      <div class="game-2048-header"><div class="game-2048-title">2048</div><div class="game-2048-scores"><div class="game-2048-score-card">SKOR<br><span id="score2048Display">0</span></div><div class="game-2048-score-card">EN YÜKSEK<br><span id="best2048Display">0</span></div></div></div>
-      <div class="grid-2048-wrapper"><div class="grid-2048" id="grid2048"></div></div>
-      <div class="game-2048-actions">
-        <button class="btn-2048" id="newGame2048Btn"><i class="fas fa-rotate-right"></i> Yeni Oyun</button>
-        <button class="btn-2048" onclick="closeGameModal()"><i class="fas fa-home"></i> Menü</button>
-      </div>
-    `;
-    gameActive = true;
-    best2048 = localStorage.getItem('2048_best') ? +localStorage.getItem('2048_best') : 0;
-    document.getElementById('best2048Display').textContent = best2048;
-    reset2048();
-    document.getElementById('newGame2048Btn').onclick = reset2048;
-    window.addEventListener('keydown', handle2048Key);
-    const grid = document.getElementById('grid2048');
-    let ts;
-    grid.addEventListener('touchstart', e => { ts = { x: e.touches[0].clientX, y: e.touches[0].clientY }; });
-    grid.addEventListener('touchend', e => {
-      if (!ts) return;
-      const dx = e.changedTouches[0].clientX - ts.x, dy = e.changedTouches[0].clientY - ts.y;
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
-      if (Math.abs(dx) > Math.abs(dy)) move2048(dx > 0 ? 'right' : 'left');
-      else move2048(dy > 0 ? 'down' : 'up');
-      ts = null;
-    });
-    openModal('gameModal');
-  }
-  function reset2048() { board2048 = Array(size2048).fill().map(() => Array(size2048).fill(0)); score2048 = 0; mergedPositions.clear(); newTilePositions.clear(); update2048Score(); addRandom2048(); addRandom2048(); render2048(); }
-  function addRandom2048() { const empty = []; for (let r = 0; r < size2048; r++) for (let c = 0; c < size2048; c++) if (board2048[r][c] === 0) empty.push([r, c]); if (!empty.length) return false; const [r, c] = empty[Math.floor(Math.random() * empty.length)]; board2048[r][c] = Math.random() < 0.9 ? 2 : 4; newTilePositions.add(`${r},${c}`); return true; }
-  function render2048() { const grid = document.getElementById('grid2048'); grid.innerHTML = ''; for (let r = 0; r < size2048; r++) for (let c = 0; c < size2048; c++) { const v = board2048[r][c]; const cell = document.createElement('div'); cell.className = 'cell-2048'; if (v) { cell.textContent = v; cell.classList.add(`tile-${v}`); } const key = `${r},${c}`; if (newTilePositions.has(key)) cell.classList.add('new'); if (mergedPositions.has(key)) cell.classList.add('merge'); grid.appendChild(cell); } newTilePositions.clear(); mergedPositions.clear(); }
-  function update2048Score() { document.getElementById('score2048Display').textContent = score2048; if (score2048 > best2048) { best2048 = score2048; localStorage.setItem('2048_best', best2048); document.getElementById('best2048Display').textContent = best2048; } }
-  function slide2048(row) { let arr = row.filter(v => v), merged = []; for (let i = 0; i < arr.length - 1; i++) if (arr[i] === arr[i + 1]) { arr[i] *= 2; score2048 += arr[i]; arr[i + 1] = 0; merged.push(i); i++; } arr = arr.filter(v => v); while (arr.length < size2048) arr.push(0); return { arr, merged }; }
-  function move2048(dir) { let changed = false; mergedPositions.clear(); if (dir === 'left') { for (let r = 0; r < size2048; r++) { const { arr, merged } = slide2048(board2048[r]); merged.forEach(i => mergedPositions.add(`${r},${i}`)); if (arr.join() !== board2048[r].join()) changed = true; board2048[r] = arr; } } else if (dir === 'right') { for (let r = 0; r < size2048; r++) { const rev = [...board2048[r]].reverse(); const { arr, merged } = slide2048(rev); const nr = arr.reverse(); merged.forEach(i => mergedPositions.add(`${r},${size2048 - 1 - i}`)); if (nr.join() !== board2048[r].join()) changed = true; board2048[r] = nr; } } else if (dir === 'up') { for (let c = 0; c < size2048; c++) { let col = board2048.map(r => r[c]); const { arr, merged } = slide2048(col); merged.forEach(i => mergedPositions.add(`${i},${c}`)); for (let r = 0; r < size2048; r++) if (board2048[r][c] !== arr[r]) changed = true; for (let r = 0; r < size2048; r++) board2048[r][c] = arr[r]; } } else if (dir === 'down') { for (let c = 0; c < size2048; c++) { let col = board2048.map(r => r[c]).reverse(); const { arr, merged } = slide2048(col); const nc = arr.reverse(); merged.forEach(i => mergedPositions.add(`${size2048 - 1 - i},${c}`)); for (let r = 0; r < size2048; r++) if (board2048[r][c] !== nc[r]) changed = true; for (let r = 0; r < size2048; r++) board2048[r][c] = nc[r]; } }
-    if (changed) { addRandom2048(); update2048Score(); render2048(); if (isGameOver2048()) { setTimeout(() => { if (tg?.showPopup) tg.showPopup({ title: 'Oyun Bitti', message: `Skor: ${score2048}`, buttons: [{ type: 'default', text: 'Yeni Oyun' }] }, (id) => { if (id === 'default') reset2048(); }); }, 100); } }
-  }
-  function isGameOver2048() { for (let r = 0; r < size2048; r++) for (let c = 0; c < size2048; c++) { if (board2048[r][c] === 0) return false; if (c < 3 && board2048[r][c] === board2048[r][c + 1]) return false; if (r < 3 && board2048[r][c] === board2048[r + 1][c]) return false; } return true; }
-  function handle2048Key(e) { if (!gameActive) return; if (e.key.startsWith('Arrow')) e.preventDefault(); switch (e.key) { case 'ArrowLeft': move2048('left'); break; case 'ArrowRight': move2048('right'); break; case 'ArrowUp': move2048('up'); break; case 'ArrowDown': move2048('down'); break; } }
-  function closeGameModal() { closeModal('gameModal'); gameActive = false; }
-  window.closeGameModal = closeGameModal;
+  window.switchPage = switchPage;
+  window.closeModal = closeModal;
+  window.openModal = openModal;
 </script>
 </body>
 </html>
