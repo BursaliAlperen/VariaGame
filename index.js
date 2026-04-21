@@ -30,8 +30,23 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim());
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-// Frontend config API
+// Telegram Bot API yardımcı fonksiyonu (isteğe bağlı kullanım)
+async function sendTelegramMessage(chatId, text) {
+  if (!TELEGRAM_BOT_TOKEN) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text })
+    });
+  } catch (e) {
+    console.error('Telegram mesaj hatası:', e);
+  }
+}
+
+// Frontend config API (Telegram token'ı FRONTEND'E GÖNDERME!)
 app.get('/api/config', (req, res) => {
   res.json({
     apiKey: process.env.FIREBASE_API_KEY,
@@ -41,10 +56,11 @@ app.get('/api/config', (req, res) => {
     messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.FIREBASE_APP_ID,
     adminIds: ADMIN_IDS
+    // Bot token asla frontend'e gönderilmez!
   });
 });
 
-// Oyun süresi kaydetme
+// Oyun süresi kaydetme (mevcut)
 app.post('/api/play-session', async (req, res) => {
   const { userId, minutes, gameTitle } = req.body;
   if (!userId || minutes <= 0 || minutes > 240) return res.status(400).json({ error: 'Geçersiz süre' });
@@ -80,6 +96,12 @@ app.post('/api/play-session', async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp()
       });
     });
+
+    // Büyük kazançlarda admin'e bildirim (opsiyonel)
+    if (earned > 0.5) {
+      // sendTelegramMessage(ADMIN_IDS[0], `💰 ${userId} ${earned.toFixed(3)}$ kazandı!`);
+    }
+
     res.json({ success: true, earned, allowedMinutes });
   } catch (error) {
     console.error(error);
@@ -87,7 +109,7 @@ app.post('/api/play-session', async (req, res) => {
   }
 });
 
-// Referans kaydı
+// Referans kaydı (mevcut)
 app.post('/api/referral', async (req, res) => {
   const { newUserId, referrerId } = req.body;
   if (!newUserId || !referrerId || newUserId === referrerId) return res.status(400).json({ error: 'Geçersiz' });
@@ -107,7 +129,7 @@ app.post('/api/referral', async (req, res) => {
   }
 });
 
-// Admin API'leri
+// Admin API'leri (mevcut)
 app.get('/api/admin/users', async (req, res) => {
   const { userId } = req.query;
   if (!ADMIN_IDS.includes(userId)) return res.status(403).json({ error: 'Yetkisiz' });
@@ -134,5 +156,18 @@ cron.schedule('*/10 * * * *', async () => {
   try { await fetch(APP_URL); console.log('Keep-alive ping'); } catch (e) {}
 });
 
+// Günlük sıfırlama cron'u (her gün 00:00'da)
+cron.schedule('0 0 * * *', async () => {
+  try {
+    const snapshot = await db.collection('users').get();
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => batch.update(doc.ref, { todayPlayedMinutes: 0 }));
+    await batch.commit();
+    console.log('Günlük oyun süreleri sıfırlandı');
+  } catch (e) {
+    console.error('Sıfırlama hatası:', e);
+  }
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Sunucu ${PORT} portunda`));
+app.listen(PORT, () => console.log(`🚀 Sunucu ${PORT} portunda, Bot token: ${TELEGRAM_BOT_TOKEN ? 'Yüklü' : 'Eksik'}`));
