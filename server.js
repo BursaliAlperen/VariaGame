@@ -5,7 +5,6 @@ const admin = require('firebase-admin');
 const cron = require('node-cron');
 const fetch = require('node-fetch');
 
-// Firebase Admin SDK Başlat
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -29,10 +28,8 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
-// Admin ID'leri
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim());
 
-// Frontend için Firebase Config
 app.get('/api/config', (req, res) => {
   res.json({
     apiKey: process.env.FIREBASE_API_KEY,
@@ -45,7 +42,6 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Oyun süresi kaydetme (Güvenli)
 app.post('/api/play-session', async (req, res) => {
   const { userId, minutes, gameTitle } = req.body;
   if (!userId || minutes <= 0 || minutes > 240) {
@@ -89,7 +85,6 @@ app.post('/api/play-session', async (req, res) => {
   }
 });
 
-// Referans kaydı
 app.post('/api/referral', async (req, res) => {
   const { newUserId, referrerId } = req.body;
   if (!newUserId || !referrerId || newUserId === referrerId) return res.status(400).json({ error: 'Geçersiz' });
@@ -109,7 +104,6 @@ app.post('/api/referral', async (req, res) => {
   }
 });
 
-// Admin: Kullanıcı listesi (sadece adminler)
 app.get('/api/admin/users', async (req, res) => {
   const { userId } = req.query;
   if (!ADMIN_IDS.includes(userId)) return res.status(403).json({ error: 'Yetkisiz' });
@@ -122,7 +116,6 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
-// Admin: Kullanıcı güncelle
 app.post('/api/admin/update-user', async (req, res) => {
   const { adminId, targetUserId, balance, level } = req.body;
   if (!ADMIN_IDS.includes(adminId)) return res.status(403).json({ error: 'Yetkisiz' });
@@ -140,10 +133,8 @@ app.post('/api/admin/update-user', async (req, res) => {
   }
 });
 
-// Ana sayfa
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// 7/24 Keep-Alive için cron job (Render uyumaz)
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 cron.schedule('*/10 * * * *', async () => {
   try {
