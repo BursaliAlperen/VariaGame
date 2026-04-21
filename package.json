@@ -1,11 +1,14 @@
 {
   "name": "varia-game",
   "version": "2.0.0",
-  "description": "VARİA GAME - Play & Earn",
+  "description": "VARİA GAME - Play & Earn with TON",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "dependencies": {
     "express": "^4.18.2",
