@@ -9,6 +9,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <!-- Howler.js (Ses efektleri için) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
     <style>
         :root {
             --bg-color: #f4f7fe;
@@ -125,9 +127,121 @@
         .promo-container input { width: 100%; padding: 18px; border-radius: 20px; border: 2px solid #e0e5f2; background: #f4f7fe; font-weight: 700; outline: none; }
         .promo-container button { background: var(--primary); color: white; border: none; border-radius: 20px; padding: 0 24px; font-weight: 800; cursor: pointer; }
 
+        /* Oyun Modalı (2048 için özel stiller) */
         .game-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 1001; animation: popIn 0.3s ease; }
-        .game-modal .modal-header { position: absolute; top: 0; left: 0; right: 0; padding: 16px 24px; background: rgba(255,255,255,0.9); z-index: 10; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .game-modal .modal-header { position: absolute; top: 0; left: 0; right: 0; padding: 16px 24px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); z-index: 10; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         #gameIframe { width: 100%; height: 100%; border: none; padding-top: 70px; background: #fff; }
+
+        /* 2048 oyun tahtası stilleri (mevcut tema ile uyumlu) */
+        .game-2048-container {
+            padding: 80px 16px 30px;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .game-2048-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .game-2048-title {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        .game-2048-scores {
+            display: flex;
+            gap: 10px;
+        }
+        .game-2048-score-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 8px 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        .grid-2048-wrapper {
+            background: #fff;
+            border-radius: 32px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+        .grid-2048 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            aspect-ratio: 1/1;
+        }
+        .cell-2048 {
+            background: #f4f7fe;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 28px;
+            color: var(--text-main);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02), 0 6px 0 #d0d7e5;
+            transition: all 0.12s cubic-bezier(0.25,0.46,0.45,0.94);
+            aspect-ratio: 1/1;
+        }
+        /* 2048 taş renkleri (temaya uygun) */
+        .tile-2    { background: #e9e3ff; color: #2b3674; }
+        .tile-4    { background: #d5cef0; color: #2b3674; }
+        .tile-8    { background: #b8a9f0; color: white; }
+        .tile-16   { background: #9f8bef; color: white; }
+        .tile-32   { background: #7e6ae8; color: white; }
+        .tile-64   { background: #5d4ae1; color: white; }
+        .tile-128  { background: #3b2bdb; color: white; font-size: 24px; }
+        .tile-256  { background: #2b1fd1; color: white; font-size: 24px; }
+        .tile-512  { background: #1f15b3; color: white; font-size: 24px; }
+        .tile-1024 { background: #160e8c; color: white; font-size: 20px; }
+        .tile-2048 { background: #0e0866; color: white; font-size: 20px; }
+
+        .cell-2048.new-tile {
+            animation: popInTile 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .cell-2048.merge {
+            animation: mergePop 0.2s ease-out;
+        }
+        @keyframes popInTile {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes mergePop {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(67,24,255,0.5); }
+            50% { transform: scale(1.2); box-shadow: 0 0 20px var(--primary); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+        }
+
+        .game-2048-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .btn-2048 {
+            background: #fff;
+            border: none;
+            color: var(--primary);
+            padding: 16px 28px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--primary-light);
+        }
+        .btn-2048:active { transform: scale(0.96); background: var(--primary-light); }
+        .btn-2048 i { color: var(--primary); }
 
         .earning-banner { position: fixed; bottom: 100px; left: 20px; right: 20px; max-width: 388px; margin: 0 auto; background: var(--text-main); color: white; padding: 16px 24px; border-radius: 20px; display: none; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-weight: 800; font-size: 1.1rem; text-align: center; }
         .earning-banner.active { display: block; animation: slideUpFade 0.3s ease forwards; }
@@ -144,6 +258,8 @@
 <audio id="sound-click" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
 <audio id="sound-success" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
 <audio id="sound-swipe" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+<!-- Merge sesi için yeni audio elementi -->
+<audio id="sound-merge" src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3" preload="auto"></audio>
 
 <!-- Yükleme Ekranı -->
 <div class="db-loading" id="dbLoading">
@@ -236,7 +352,6 @@
 
         <!-- REFERANS SAYFASI -->
         <div class="page" id="referralPage">
-            <!-- Referans Paylaşım Kartı -->
             <div class="daily-card" style="text-align:center; padding: 30px 20px;">
                 <i class="fas fa-user-plus" style="font-size:3rem; color:var(--primary); margin-bottom:16px;"></i>
                 <h3 style="font-size:1.5rem; font-weight:900; color:var(--text-main); margin-bottom:8px;">Arkadaşlarını Davet Et</h3>
@@ -249,7 +364,6 @@
                 </div>
             </div>
 
-            <!-- Canlı İstatistikler -->
             <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:24px;">
                 <div class="stat-card" style="text-align:center; padding:16px; margin:0;">
                     <i class="fas fa-users" style="color:var(--primary); font-size:1.5rem;"></i>
@@ -263,10 +377,8 @@
                 </div>
             </div>
 
-            <!-- Referans Geçmişi -->
             <div class="section-header"><h3>Davet Geçmişi</h3><i class="fas fa-history" style="color:var(--primary);"></i></div>
             <div id="referralHistoryList" style="display:flex; flex-direction:column;">
-                <!-- Dinamik Liste Buraya Gelecek -->
             </div>
         </div>
 
@@ -297,8 +409,18 @@
     </div>
 </div>
 
-<!-- Modal ve Ayarlar Kısımları (Önceki İle Aynı) -->
-<div class="game-modal" id="gameModal"><div class="modal-header"><h3 id="modalGameTitle" style="color:var(--text-main); font-weight:800;">Oyun</h3><button onclick="closeGameModal()" style="background:var(--danger); border:none; padding:10px 20px; border-radius:20px; color:white; font-weight:800;"><i class="fas fa-times"></i> Çıkış</button></div><iframe id="gameIframe" src="" allowfullscreen></iframe></div>
+<!-- Oyun Modali (2048 özel içerikle doldurulacak) -->
+<div class="game-modal" id="gameModal">
+    <div class="modal-header">
+        <h3 id="modalGameTitle" style="color:var(--text-main); font-weight:800;">2048</h3>
+        <button onclick="closeGameModal()" style="background:var(--danger); border:none; padding:10px 20px; border-radius:20px; color:white; font-weight:800;"><i class="fas fa-times"></i> Çıkış</button>
+    </div>
+    <div id="game2048Container" class="game-2048-container">
+        <!-- 2048 oyun tahtası buraya eklenecek -->
+    </div>
+</div>
+
+<!-- Diğer Modallar -->
 <div class="modal-overlay" id="tonCashoutModal"><div class="modal-content"><div class="modal-header"><h3 style="color:#0088cc;"><i class="fab fa-telegram"></i> TONCoin Çekimi</h3><div class="modal-close" onclick="closeModal('tonCashoutModal')"><i class="fas fa-times"></i></div></div><div style="background:#f4f7fe; padding:16px; border-radius:16px; margin-bottom:16px; text-align:center;"><p style="color:var(--text-muted); font-weight:700; margin-bottom:4px;">1 TON Anlık Fiyatı</p><h2 style="color:var(--success); font-weight:900;">$<span id="modalLiveTon">...</span></h2></div><p style="font-size:1.1rem; font-weight:700; margin-bottom:8px;">Bakiyeniz: $<span id="cashoutBalance">0.00</span></p><input type="text" id="tonWalletAddress" placeholder="TON Cüzdan Adresiniz (UQ...)" style="width:100%; padding:16px; border-radius:16px; border:2px solid #e0e5f2; outline:none; font-weight:700; margin-bottom:12px;"><div style="background:var(--primary-light); color:var(--primary); padding:12px; border-radius:16px; text-align:center; font-weight:800; margin-bottom:16px;">Alacağınız Tutar: <span id="tonEquivalent">0.000</span> TON</div><button onclick="processTonCashout()" id="cashoutSubmitBtn" style="background:#0088cc; color:white; padding:18px; width:100%; border:none; border-radius:20px; font-weight:800; font-size:1.1rem;">Çekim Talebi Gönder</button></div></div>
 <div class="modal-overlay" id="settingsModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-gear"></i> Ayarlar</h3><div class="modal-close" onclick="closeModal('settingsModal')"><i class="fas fa-times"></i></div></div><div style="background:#f4f7fe; padding:20px; border-radius:20px; display:flex; justify-content:space-between; align-items:center; font-weight:800; cursor:pointer;" onclick="toggleSetting('sound')"><span><i class="fas fa-volume-high" style="color:var(--primary);"></i> Ses Efektleri</span><span id="soundStatus" style="background:var(--success); color:white; padding:6px 16px; border-radius:20px; font-size:0.9rem;">Açık</span></div></div></div>
 <div class="earning-banner" id="earningBanner"></div>
@@ -314,7 +436,7 @@
     let userData = null;
     let activeGames = [];
     let liveTonPrice = 0;
-    const REF_BONUS = 0.15; // Davet başına kazanılacak para
+    const REF_BONUS = 0.15;
     const BASE_RATE = 0.001, MAX_RATE = 0.002;
     
     const firebaseConfig = {
@@ -322,10 +444,25 @@
         storageBucket: "your-app.appspot.com", messagingSenderId: "123456789", appId: "1:123456789:web:abcdef123456"
     };
 
-    function playUiSound(type) { if(userData && userData.settings && userData.settings.sound === false) return; try { const a = document.getElementById(`sound-${type}`); if(a){ a.currentTime=0; a.play().catch(e=>{}); } } catch(err) {} }
-    function showToast(msg, isError = false) { const b = document.getElementById('earningBanner'); b.innerHTML = msg; b.style.background = isError ? "var(--danger)" : "var(--success)"; b.classList.remove('active'); void b.offsetWidth; b.classList.add('active'); setTimeout(() => b.classList.remove('active'), 3500); }
+    // Ses çalma fonksiyonu (mevcut UI sesleri + merge)
+    function playUiSound(type) { 
+        if(userData && userData.settings && userData.settings.sound === false) return; 
+        try { 
+            const a = document.getElementById(`sound-${type}`); 
+            if(a){ a.currentTime=0; a.play().catch(e=>{}); } 
+        } catch(err) {} 
+    }
+    function showToast(msg, isError = false) { 
+        const b = document.getElementById('earningBanner'); 
+        b.innerHTML = msg; 
+        b.style.background = isError ? "var(--danger)" : "var(--success)"; 
+        b.classList.remove('active'); 
+        void b.offsetWidth; 
+        b.classList.add('active'); 
+        setTimeout(() => b.classList.remove('active'), 3500); 
+    }
 
-    // --- FIREBASE BAŞLATMA VE CANLI VERİ DİNLEME ---
+    // --- FIREBASE BAŞLATMA ---
     async function initApp() {
         try {
             if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -335,18 +472,16 @@
             const docSnap = await userRef.get();
 
             if (!docSnap.exists) {
-                // Yeni Kullanıcı Oluşturma
                 userData = { 
                     balance: 0.00, streak: 0, lastClaimDate: null, gamesPlayed: 0, 
                     totalEarned: 0.00, totalMinutes: 0, xp: 0, level: 1, 
                     settings: {sound: true}, onboardingCompleted: false, 
                     joinedTelegram: false, claimedCodes: [],
-                    referralCount: 0, referralEarnings: 0.00, // Referans Değişkenleri
+                    referralCount: 0, referralEarnings: 0.00,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 await userRef.set(userData);
 
-                // REFERANS MOTORU: Eğer biri davet ettiyse ve kendisi değilse
                 if(referrerId && referrerId !== userId) {
                     processNewReferral(referrerId, userId, userNameTg);
                 }
@@ -354,22 +489,23 @@
                 userData = docSnap.data();
             }
 
-            // Canlı Kullanıcı Verisi Dinleme (onSnapshot)
             userRef.onSnapshot(doc => {
                 if(doc.exists) {
                     userData = doc.data();
-                    updateUI(); // Bakiye ve Ref istatistiklerini canlı günceller
+                    updateUI();
                 }
             });
 
-            // Canlı Referans Geçmişini Dinleme (onSnapshot)
             listenToReferralHistory();
-
             await fetchGames();
             document.getElementById('dbLoading').style.display = 'none';
 
-            if(userData.onboardingCompleted) { initTelegramUI(); document.getElementById('mainApp').classList.add('active'); } 
-            else { document.getElementById('onboarding').classList.add('active'); }
+            if(userData.onboardingCompleted) { 
+                initTelegramUI(); 
+                document.getElementById('mainApp').classList.add('active'); 
+            } else { 
+                document.getElementById('onboarding').classList.add('active'); 
+            }
             
             startLivePriceTicker();
         } catch(e) {
@@ -377,10 +513,8 @@
         }
     }
 
-    // --- YENİ REFERANS İŞLEME MANTIĞI ---
     async function processNewReferral(refId, newUserId, newUserName) {
         try {
-            // Referans tablosuna log kaydı atıyoruz
             await db.collection('referrals').add({
                 referrerId: refId,
                 referredId: newUserId,
@@ -388,8 +522,6 @@
                 bonusEarned: REF_BONUS,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-
-            // Davet edenin (Referrer) bakiyesini ve istatistiklerini güncelle (Canlı yansıyacaktır)
             await db.collection('users').doc(refId).update({
                 balance: firebase.firestore.FieldValue.increment(REF_BONUS),
                 totalEarned: firebase.firestore.FieldValue.increment(REF_BONUS),
@@ -399,7 +531,6 @@
         } catch(error) { console.error("Referans işleme hatası", error); }
     }
 
-    // --- CANLI REFERANS GEÇMİŞİ DİNLEYİCİSİ ---
     function listenToReferralHistory() {
         db.collection('referrals')
           .where('referrerId', '==', userId)
@@ -414,18 +545,7 @@
                       const data = doc.data();
                       const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('tr-TR') : 'Şimdi';
                       const initial = data.referredName ? data.referredName.charAt(0).toUpperCase() : '?';
-                      
-                      html += `
-                      <div class="ref-item">
-                          <div class="ref-item-left">
-                              <div class="ref-avatar">${initial}</div>
-                              <div>
-                                  <h4 style="font-size:1.05rem; font-weight:800; color:var(--text-main); margin-bottom:2px;">${data.referredName}</h4>
-                                  <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600;"><i class="far fa-calendar-alt"></i> ${date}</p>
-                              </div>
-                          </div>
-                          <div style="color:var(--success); font-weight:900; font-size:1.1rem;">+$${data.bonusEarned.toFixed(2)}</div>
-                      </div>`;
+                      html += `<div class="ref-item"><div class="ref-item-left"><div class="ref-avatar">${initial}</div><div><h4 style="font-size:1.05rem; font-weight:800; color:var(--text-main); margin-bottom:2px;">${data.referredName}</h4><p style="font-size:0.8rem; color:var(--text-muted); font-weight:600;"><i class="far fa-calendar-alt"></i> ${date}</p></div></div><div style="color:var(--success); font-weight:900; font-size:1.1rem;">+$${data.bonusEarned.toFixed(2)}</div></div>`;
                   });
                   listDiv.innerHTML = html;
               }
@@ -434,7 +554,6 @@
 
     async function saveUserData() { if(userData) await db.collection('users').doc(userId).update(userData); }
 
-    // --- CANLI KRİPTO VE UI ---
     async function fetchTonPrice() {
         try {
             const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TONUSDT');
@@ -452,11 +571,8 @@
         document.getElementById('totalEarned').textContent='$'+userData.totalEarned.toFixed(2); 
         document.getElementById('totalGames').textContent=userData.gamesPlayed; 
         document.getElementById('profileMinutes').textContent=Math.floor(userData.totalMinutes) + 'm';
-        
-        // Referans İstatistikleri (Canlı)
         document.getElementById('liveRefCount').textContent = userData.referralCount || 0;
         document.getElementById('liveRefEarned').textContent = '$' + (userData.referralEarnings || 0).toFixed(2);
-
         updateCashoutEquivalent();
     }
 
@@ -464,43 +580,259 @@
         document.getElementById('userName').textContent = userNameTg;
         document.getElementById('referralLink').textContent = `t.me/VariaGAME_bot?startapp=${userId}`;
         if(tg.initDataUnsafe?.user?.photo_url) document.getElementById('userAvatar').style.backgroundImage = `url(${tg.initDataUnsafe.user.photo_url})`;
-        
-        if(userData.settings && userData.settings.sound === false) { document.getElementById('soundStatus').textContent = 'Kapalı'; document.getElementById('soundStatus').style.background = '#a3aed1'; }
+        if(userData.settings && userData.settings.sound === false) { 
+            document.getElementById('soundStatus').textContent = 'Kapalı'; 
+            document.getElementById('soundStatus').style.background = '#a3aed1'; 
+        }
         if(userData.joinedTelegram) document.getElementById('telegramTaskBox').style.display = 'none';
-
         calculateLevel(); updateUI(); renderStreak(); renderAllGames();
     }
 
-    // Oyunlar, Modal vb. diğer tüm fonksiyonlar (önceki yapıyla aynı)
     async function fetchGames() {
+        // Örnek oyun listesi (Firestore yoksa)
+        activeGames = [
+            { ad:"2048", kategori:"Zeka", embed:"2048", resim:"https://img.crazygames.com/2048.png" }
+        ];
+        // Firestore'dan çekmek isterseniz burayı aktif edin
+        /*
         const snapshot = await db.collection('games').get();
-        if (snapshot.empty) {
-            activeGames = [{ ad:"2048", kategori:"Zeka", embed:"https://www.crazygames.com/embed/2048", resim:"https://img.crazygames.com/2048.png" }];
-        } else { activeGames = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }
+        if (!snapshot.empty) {
+            activeGames = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+        */
     }
 
     function renderAllGames(){
         const html = activeGames.map(o=>`<div class="game-card" onclick="openGame('${o.embed}','${o.ad}')" style="display:flex; gap:16px; align-items:center; padding:12px; text-align:left;"><div class="game-thumb" style="width:70px; height:70px; margin:0; flex-shrink:0;"><img src="${o.resim}" style="width:100%; height:100%; object-fit:cover;"></div><div style="flex-grow:1;"><h4 style="font-size:1.1rem; margin-bottom:4px;">${o.ad}</h4><p style="color:var(--text-muted); font-size:0.85rem; font-weight:700;">${o.kategori}</p></div><div style="color:var(--primary); font-size:1.5rem;"><i class="fas fa-play-circle"></i></div></div>`).join('');
-        document.getElementById('allGamesList').innerHTML = html; document.getElementById('featuredGames').innerHTML = html; 
+        document.getElementById('allGamesList').innerHTML = html; 
+        document.getElementById('featuredGames').innerHTML = html; 
     }
 
-    // ... Diğer standart fonksiyonlar (Onboarding, Telegram Görev, Modal Aç/Kapat)
+    // --- 2048 Oyun Motoru (özel entegrasyon) ---
+    let board2048, score2048, best2048, size2048=4;
+    let mergedPositions = new Set(), newTilePositions = new Set();
+    let game2048Active = false;
+
+    function openGame(gameId, gameTitle) {
+        playUiSound('click');
+        if (gameId === '2048') {
+            document.getElementById('modalGameTitle').textContent = '2048 · Varia Edition';
+            const container = document.getElementById('game2048Container');
+            // Oyun arayüzünü oluştur
+            container.innerHTML = `
+                <div class="game-2048-header">
+                    <div class="game-2048-title">2048</div>
+                    <div class="game-2048-scores">
+                        <div class="game-2048-score-card"><span style="color:var(--text-muted);">SKOR</span><br><span id="score2048Display" style="font-weight:800;">0</span></div>
+                        <div class="game-2048-score-card"><span style="color:var(--text-muted);">EN YÜKSEK</span><br><span id="best2048Display" style="font-weight:800;">0</span></div>
+                    </div>
+                </div>
+                <div class="grid-2048-wrapper">
+                    <div class="grid-2048" id="grid2048"></div>
+                </div>
+                <div class="game-2048-actions">
+                    <button class="btn-2048" id="newGame2048Btn"><i class="fas fa-rotate-right"></i> Yeni Oyun</button>
+                    <button class="btn-2048" onclick="document.getElementById('gameModal').style.display='none'; game2048Active=false;"><i class="fas fa-home"></i> Menü</button>
+                </div>
+                <div style="text-align:center; margin-top:10px; color:var(--text-muted);"><i class="fas fa-arrow-left"></i> <i class="fas fa-arrow-up"></i> <i class="fas fa-arrow-down"></i> <i class="fas fa-arrow-right"></i> veya kaydır</div>
+            `;
+            document.getElementById('gameModal').style.display = 'block';
+            init2048Game();
+            game2048Active = true;
+        } else {
+            // Diğer oyunlar embed olarak açılabilir (isteğe bağlı)
+            document.getElementById('modalGameTitle').textContent = gameTitle;
+            const container = document.getElementById('game2048Container');
+            container.innerHTML = `<iframe id="gameIframe" src="${gameId}" allowfullscreen style="width:100%; height:calc(100vh - 70px); border:none; padding-top:70px;"></iframe>`;
+            document.getElementById('gameModal').style.display = 'block';
+            game2048Active = false;
+        }
+    }
+
+    function init2048Game() {
+        best2048 = localStorage.getItem('2048_best') ? parseInt(localStorage.getItem('2048_best')) : 0;
+        document.getElementById('best2048Display').textContent = best2048;
+        reset2048Board();
+        document.getElementById('newGame2048Btn').addEventListener('click', reset2048Board);
+        window.addEventListener('keydown', handle2048Key);
+        // Dokunmatik
+        const gridEl = document.getElementById('grid2048');
+        let touchStart;
+        gridEl.addEventListener('touchstart', e => { touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }, {passive: true});
+        gridEl.addEventListener('touchend', e => {
+            if (!touchStart) return;
+            const dx = e.changedTouches[0].clientX - touchStart.x;
+            const dy = e.changedTouches[0].clientY - touchStart.y;
+            if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+            if (Math.abs(dx) > Math.abs(dy)) move2048(dx > 0 ? 'right' : 'left');
+            else move2048(dy > 0 ? 'down' : 'up');
+            touchStart = null;
+        });
+    }
+
+    function reset2048Board() {
+        board2048 = Array(size2048).fill().map(() => Array(size2048).fill(0));
+        score2048 = 0;
+        update2048ScoreUI();
+        addRandom2048Tile(); addRandom2048Tile();
+        render2048Board();
+        playUiSound('swipe');
+    }
+
+    function addRandom2048Tile() {
+        const empty = [];
+        for (let r=0; r<size2048; r++) for (let c=0; c<size2048; c++) if (board2048[r][c]===0) empty.push([r,c]);
+        if (!empty.length) return false;
+        const [r,c] = empty[Math.floor(Math.random()*empty.length)];
+        board2048[r][c] = Math.random()<0.9 ? 2 : 4;
+        newTilePositions.add(`${r},${c}`);
+        return true;
+    }
+
+    function render2048Board() {
+        const gridEl = document.getElementById('grid2048');
+        gridEl.innerHTML = '';
+        for (let r=0; r<size2048; r++) {
+            for (let c=0; c<size2048; c++) {
+                const val = board2048[r][c];
+                const cell = document.createElement('div');
+                cell.className = 'cell-2048';
+                if (val) { cell.textContent = val; cell.classList.add(`tile-${val}`); }
+                const key = `${r},${c}`;
+                if (newTilePositions.has(key)) cell.classList.add('new-tile');
+                if (mergedPositions.has(key)) cell.classList.add('merge');
+                gridEl.appendChild(cell);
+            }
+        }
+        newTilePositions.clear();
+        mergedPositions.clear();
+    }
+
+    function update2048ScoreUI() {
+        document.getElementById('score2048Display').textContent = score2048;
+        if (score2048 > best2048) {
+            best2048 = score2048;
+            localStorage.setItem('2048_best', best2048);
+            document.getElementById('best2048Display').textContent = best2048;
+        }
+    }
+
+    function slide2048(row) {
+        let arr = row.filter(v => v);
+        let merged = [];
+        for (let i=0; i<arr.length-1; i++) {
+            if (arr[i] === arr[i+1]) {
+                arr[i] *= 2;
+                score2048 += arr[i];
+                arr[i+1] = 0;
+                merged.push(i);
+                i++;
+            }
+        }
+        arr = arr.filter(v => v);
+        while(arr.length < size2048) arr.push(0);
+        return {arr, merged};
+    }
+
+    function move2048(dir) {
+        let changed = false;
+        mergedPositions.clear();
+        if (dir === 'left') {
+            for (let r=0; r<size2048; r++) {
+                const {arr, merged} = slide2048(board2048[r]);
+                merged.forEach(i => mergedPositions.add(`${r},${i}`));
+                if (arr.join() !== board2048[r].join()) changed = true;
+                board2048[r] = arr;
+            }
+        } else if (dir === 'right') {
+            for (let r=0; r<size2048; r++) {
+                const rev = [...board2048[r]].reverse();
+                const {arr, merged} = slide2048(rev);
+                const newRow = arr.reverse();
+                merged.forEach(i => mergedPositions.add(`${r},${size2048-1-i}`));
+                if (newRow.join() !== board2048[r].join()) changed = true;
+                board2048[r] = newRow;
+            }
+        } else if (dir === 'up') {
+            for (let c=0; c<size2048; c++) {
+                let col = board2048.map(r => r[c]);
+                const {arr, merged} = slide2048(col);
+                merged.forEach(i => mergedPositions.add(`${i},${c}`));
+                for (let r=0; r<size2048; r++) if (board2048[r][c] !== arr[r]) changed = true;
+                for (let r=0; r<size2048; r++) board2048[r][c] = arr[r];
+            }
+        } else if (dir === 'down') {
+            for (let c=0; c<size2048; c++) {
+                let col = board2048.map(r => r[c]).reverse();
+                const {arr, merged} = slide2048(col);
+                const newCol = arr.reverse();
+                merged.forEach(i => mergedPositions.add(`${size2048-1-i},${c}`));
+                for (let r=0; r<size2048; r++) if (board2048[r][c] !== newCol[r]) changed = true;
+                for (let r=0; r<size2048; r++) board2048[r][c] = newCol[r];
+            }
+        }
+        if (changed) {
+            playUiSound(mergedPositions.size ? 'merge' : 'swipe');
+            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred(mergedPositions.size ? 'medium' : 'light');
+            addRandom2048Tile();
+            update2048ScoreUI();
+            render2048Board();
+            if (is2048GameOver()) {
+                setTimeout(() => {
+                    if (tg?.showPopup) {
+                        tg.showPopup({ title: 'Oyun Bitti', message: `Skor: ${score2048}`, buttons: [{type:'default', text:'Yeni Oyun'}] }, (id) => { if (id==='default') reset2048Board(); });
+                    } else alert(`Oyun bitti! Skor: ${score2048}`);
+                }, 100);
+            }
+        }
+    }
+
+    function is2048GameOver() {
+        for (let r=0; r<size2048; r++) for (let c=0; c<size2048; c++) {
+            if (board2048[r][c] === 0) return false;
+            if (c<size2048-1 && board2048[r][c] === board2048[r][c+1]) return false;
+            if (r<size2048-1 && board2048[r][c] === board2048[r+1][c]) return false;
+        }
+        return true;
+    }
+
+    function handle2048Key(e) {
+        if (!game2048Active) return;
+        if (e.key.startsWith('Arrow')) e.preventDefault();
+        switch(e.key) {
+            case 'ArrowLeft': move2048('left'); break;
+            case 'ArrowRight': move2048('right'); break;
+            case 'ArrowUp': move2048('up'); break;
+            case 'ArrowDown': move2048('down'); break;
+        }
+    }
+
+    function closeGameModal() {
+        document.getElementById('gameModal').style.display = 'none';
+        game2048Active = false;
+        playUiSound('click');
+    }
+
+    // --- Ortak Fonksiyonlar (eksik olanlar dummy) ---
     function switchPage(page){ playUiSound('swipe'); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(page+'Page').classList.add('active'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active'); }
     function openModal(id){ playUiSound('swipe'); document.getElementById(id).classList.add('active'); }
     function closeModal(id){ playUiSound('swipe'); document.getElementById(id).classList.remove('active'); }
     function copyReferralLink(){ playUiSound('click'); navigator.clipboard?.writeText('https://'+document.getElementById('referralLink').textContent); showToast('<i class="fas fa-check-circle"></i> Link Kopyalandı!'); }
     function shareReferralLink(){ playUiSound('click'); const link = `https://t.me/VariaGAME_bot?startapp=${userId}`; tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=Hemen oyna ve kripto kazan!`); }
     function toggleSetting(s){ playUiSound('click'); userData.settings[s] = !userData.settings[s]; const btn = document.getElementById('soundStatus'); if(userData.settings[s]){ btn.textContent = 'Açık'; btn.style.background = 'var(--success)'; } else { btn.textContent = 'Kapalı'; btn.style.background = '#a3aed1'; } saveUserData(); }
-    
-    // Geri kalan Onboarding atlamaları test için eklendi:
     function selectAge(a){ playUiSound('click'); document.querySelectorAll('[data-step="1"] .select-btn').forEach(b=>b.classList.remove('active')); event.currentTarget.classList.add('active'); }
     function selectGenre(g){ playUiSound('click'); event.currentTarget.classList.toggle('active'); }
     function selectFrequency(f){ playUiSound('click'); document.querySelectorAll('[data-step="3"] .select-btn').forEach(b=>b.classList.remove('active')); event.currentTarget.classList.add('active'); }
     function nextOnboardingStep(s){ playUiSound('swipe'); document.querySelectorAll('.onboarding-step').forEach(e=>e.classList.remove('active')); document.querySelector(`[data-step="${s}"]`).classList.add('active'); }
     function completeOnboarding(){ playUiSound('success'); userData.onboardingCompleted = true; saveUserData(); document.getElementById('onboarding').style.display='none'; initTelegramUI(); document.getElementById('mainApp').classList.add('active'); }
-
-    // Dummy UI function requirements:
-    function calculateLevel(){} function renderStreak(){} function claimDaily(){} function joinTelegram(){} function openGame(u,t){} function closeGameModal(){} function claimPromoCode(){} function updateCashoutEquivalent(){} function processTonCashout(){}
+    function calculateLevel(){} 
+    function renderStreak(){} 
+    function claimDaily(){} 
+    function joinTelegram(){} 
+    function claimPromoCode(){} 
+    function updateCashoutEquivalent(){} 
+    function processTonCashout(){}
+    function filterGames() { renderAllGames(); }
     
     window.addEventListener('load', initApp);
 </script>
