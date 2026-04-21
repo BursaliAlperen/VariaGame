@@ -1,7 +1,7 @@
 {
   "name": "varia-game",
   "version": "2.0.0",
-  "description": "VARİA GAME - Play & Earn",
+  "description": "VARİA GAME - Play & Earn (Güvenli Backend)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -10,7 +10,9 @@
   "dependencies": {
     "express": "^4.18.2",
     "dotenv": "^16.3.1",
-    "firebase-admin": "^11.11.0"
+    "firebase-admin": "^11.11.0",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
