@@ -1,11 +1,10 @@
 {
   "name": "varia-game",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "VARİA GAME - Play & Earn with TON",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node index.js"
   },
   "engines": {
     "node": "20.x"
@@ -16,8 +15,5 @@
     "firebase-admin": "^11.11.0",
     "node-cron": "^3.0.3",
     "node-fetch": "^2.6.7"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
   }
 }
