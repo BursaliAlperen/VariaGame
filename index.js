@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
 const cron = require('node-cron');
 const fetch = require('node-fetch');
 
-// Firebase Admin başlat
+// ==================== FIREBASE ADMIN BAŞLAT ====================
 try {
   if (!admin.apps.length) {
     const privateKey = process.env.FIREBASE_PRIVATE_KEY 
@@ -13,7 +13,7 @@ try {
       : undefined;
     
     if (!privateKey) {
-      console.error('❌ FIREBASE_PRIVATE_KEY bulunamadı!');
+      console.error('❌ FIREBASE_PRIVATE_KEY bulunamadı! .env dosyasını kontrol edin.');
     }
     
     admin.initializeApp({
@@ -24,13 +24,58 @@ try {
       }),
       projectId: process.env.FIREBASE_PROJECT_ID
     });
-    console.log('✅ Firebase Admin başlatıldı');
+    console.log('✅ Firebase Admin başarıyla başlatıldı');
   }
 } catch (error) {
-  console.error('❌ Firebase Admin hatası:', error.message);
+  console.error('❌ Firebase Admin başlatma hatası:', error.message);
 }
 
 const db = admin.firestore();
+
+// ==================== OTOMATİK KOLEKSİYON OLUŞTURMA ====================
+async function ensureCollectionsExist() {
+  console.log('📦 Koleksiyonlar kontrol ediliyor...');
+  
+  const collections = ['users', 'referrals', 'playSessions', 'games', 'promoCodes', 'withdrawals', 'dailyStats'];
+  
+  for (const collectionName of collections) {
+    try {
+      const initDoc = db.collection(collectionName).doc('_init_');
+      await initDoc.set({
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        description: `Auto-created ${collectionName} collection`,
+        _init: true
+      }, { merge: true });
+      
+      console.log(`✅ ${collectionName} koleksiyonu hazır`);
+    } catch (error) {
+      console.error(`❌ ${collectionName} koleksiyonu oluşturulamadı:`, error.message);
+    }
+  }
+  
+  // Örnek oyun ekle (games koleksiyonu boş kalmasın)
+  try {
+    const gamesRef = db.collection('games');
+    const gamesSnapshot = await gamesRef.limit(1).get();
+    if (gamesSnapshot.empty) {
+      await gamesRef.doc('2048').set({
+        ad: '2048',
+        kategori: 'Puzzle',
+        embed: '2048',
+        resim: '2048.png',
+        active: true,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('✅ Örnek 2048 oyunu eklendi');
+    }
+  } catch (error) {
+    console.error('❌ Örnek oyun eklenemedi:', error.message);
+  }
+  
+  console.log('🎉 Tüm koleksiyonlar kontrol edildi ve hazır!');
+}
+
+// ==================== EXPRESS UYGULAMASI ====================
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -38,6 +83,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
     if (filePath.match(/\.(mp4|webm|ogg)$/i)) {
       res.setHeader('Content-Type', 'video/mp4');
       res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
     }
     if (filePath.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -49,7 +95,7 @@ const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim());
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const BOT_USERNAME = 'VariaGAME_bot';
 
-// Telegram Bot API Yardımcı Fonksiyonları
+// ==================== TELEGRAM BOT YARDIMCI FONKSİYONLARI ====================
 async function sendTelegramMessage(chatId, text) {
   if (!TELEGRAM_BOT_TOKEN) return;
   try {
@@ -59,20 +105,26 @@ async function sendTelegramMessage(chatId, text) {
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
     });
   } catch (e) {
-    console.error('Telegram mesaj hatası:', e);
+    console.error('Telegram mesaj hatası:', e.message);
   }
 }
 
-async function getTelegramUserInfo(userId) {
-  if (!TELEGRAM_BOT_TOKEN) return null;
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getChat?chat_id=${userId}`);
-    const data = await res.json();
-    return data.ok ? data.result : null;
-  } catch (e) {
-    return null;
+// ==================== REFERANS KODU OLUŞTURMA ====================
+function generateRefCode(userId) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+    hash = hash & hash;
   }
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.abs((hash >> (i * 4)) % chars.length));
+  }
+  return result;
 }
+
+// ==================== API ENDPOINTS ====================
 
 // Frontend config API
 app.get('/api/config', (req, res) => {
@@ -101,9 +153,11 @@ app.get('/api/user/ref-link', async (req, res) => {
     let refCode = userDoc.exists ? userDoc.data().refCode : null;
     
     if (!refCode) {
-      // Benzersiz referans kodu oluştur (8 karakter)
       refCode = generateRefCode(userId);
-      await userRef.set({ refCode, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      await userRef.set({ 
+        refCode, 
+        updatedAt: admin.firestore.FieldValue.serverTimestamp() 
+      }, { merge: true });
     }
     
     const refLink = `https://t.me/${BOT_USERNAME}?start=${refCode}`;
@@ -120,7 +174,6 @@ app.post('/api/referral/process', async (req, res) => {
   if (!newUserId || !refCode) return res.status(400).json({ error: 'Missing parameters' });
   
   try {
-    // Referans koduna sahip kullanıcıyı bul
     const usersSnapshot = await db.collection('users')
       .where('refCode', '==', refCode)
       .limit(1)
@@ -137,7 +190,6 @@ app.post('/api/referral/process', async (req, res) => {
       return res.json({ success: false, message: 'Cannot refer yourself' });
     }
     
-    // Yeni kullanıcının daha önce referans ile gelip gelmediğini kontrol et
     const newUserRef = db.collection('users').doc(String(newUserId));
     const newUserDoc = await newUserRef.get();
     
@@ -148,14 +200,12 @@ app.post('/api/referral/process', async (req, res) => {
     const REF_BONUS = 0.15;
     
     await db.runTransaction(async (t) => {
-      // Yeni kullanıcıyı güncelle
       t.set(newUserRef, {
         referredBy: referrerId,
         refCode: generateRefCode(newUserId),
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       
-      // Davet edenin istatistiklerini güncelle
       const referrerRef = db.collection('users').doc(referrerId);
       t.update(referrerRef, {
         balance: admin.firestore.FieldValue.increment(REF_BONUS),
@@ -164,7 +214,6 @@ app.post('/api/referral/process', async (req, res) => {
         referralEarnings: admin.firestore.FieldValue.increment(REF_BONUS)
       });
       
-      // Referans kaydı oluştur
       t.set(db.collection('referrals').doc(), {
         referrerId: referrerId,
         referredId: newUserId,
@@ -173,14 +222,10 @@ app.post('/api/referral/process', async (req, res) => {
       });
     });
     
-    // Davet edene bildirim gönder
     const referrerData = referrerDoc.data();
     if (referrerData.telegramId) {
       await sendTelegramMessage(referrerData.telegramId, 
-        `🎉 <b>Yeni Davet!</b>\n\n` +
-        `Bir arkadaşın senin linkinle kaydoldu!\n` +
-        `💰 Kazandığın ödül: <b>+$${REF_BONUS.toFixed(2)}</b>\n\n` +
-        `Toplam davet: ${(referrerData.referralCount || 0) + 1}`
+        `🎉 <b>Yeni Davet!</b>\n\nBir arkadaşın senin linkinle kaydoldu!\n💰 Kazandığın ödül: <b>+$${REF_BONUS.toFixed(2)}</b>`
       );
     }
     
@@ -211,7 +256,7 @@ app.get('/api/user/referrals', async (req, res) => {
       if (data.referredId) {
         const userDoc = await db.collection('users').doc(data.referredId).get();
         if (userDoc.exists) {
-          referredName = userDoc.data().firstName || userDoc.data().telegramId || 'User';
+          referredName = userDoc.data().firstName || 'User';
         }
       }
       
@@ -257,7 +302,8 @@ app.post('/api/play-session', async (req, res) => {
         totalMinutes: admin.firestore.FieldValue.increment(allowedMinutes),
         todayPlayedMinutes: admin.firestore.FieldValue.increment(allowedMinutes),
         totalEarned: admin.firestore.FieldValue.increment(earned),
-        gamesPlayed: admin.firestore.FieldValue.increment(1)
+        gamesPlayed: admin.firestore.FieldValue.increment(1),
+        xp: admin.firestore.FieldValue.increment(Math.floor(allowedMinutes * 5))
       });
       t.set(db.collection('playSessions').doc(), {
         userId: String(userId),
@@ -293,44 +339,45 @@ app.post('/api/admin/update-user', async (req, res) => {
   res.json({ success: true });
 });
 
-// Referans kodu oluşturma yardımcı fonksiyonu
-function generateRefCode(userId) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  // User ID'den hash benzeri bir değer oluştur
-  let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    hash = ((hash << 5) - hash) + userId.charCodeAt(i);
-    hash = hash & hash;
-  }
-  // 8 karakterli kod oluştur
-  for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.abs((hash >> (i * 4)) % chars.length));
-  }
-  return result;
-}
-
 // Ana sayfa
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// Keep-alive
+// Keep-alive (7/24)
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 cron.schedule('*/10 * * * *', async () => {
-  try { await fetch(APP_URL); console.log('✅ Keep-alive ping'); } catch (e) {}
+  try { 
+    await fetch(APP_URL); 
+    console.log('✅ Keep-alive ping'); 
+  } catch (e) {
+    console.error('Keep-alive hatası:', e.message);
+  }
 });
 
-// Günlük sıfırlama
+// Günlük sıfırlama (her gün 00:00'da)
 cron.schedule('0 0 * * *', async () => {
   try {
     const snapshot = await db.collection('users').get();
     const batch = db.batch();
     snapshot.docs.forEach(doc => batch.update(doc.ref, { todayPlayedMinutes: 0 }));
     await batch.commit();
-    console.log('✅ Daily reset completed');
+    console.log('✅ Günlük oyun süreleri sıfırlandı');
   } catch (e) {
-    console.error('❌ Reset error:', e);
+    console.error('❌ Sıfırlama hatası:', e.message);
   }
 });
 
+// ==================== SUNUCUYU BAŞLAT ====================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+// Önce koleksiyonları oluştur, sonra sunucuyu başlat
+ensureCollectionsExist().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Sunucu ${PORT} portunda çalışıyor`);
+    console.log(`📱 Web App: ${APP_URL}`);
+  });
+}).catch(error => {
+  console.error('❌ Koleksiyon oluşturma hatası, sunucu yine de başlatılıyor:', error.message);
+  app.listen(PORT, () => {
+    console.log(`🚀 Sunucu ${PORT} portunda çalışıyor (koleksiyon hatası ile)`);
+  });
+});
