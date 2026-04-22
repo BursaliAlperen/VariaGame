@@ -36,7 +36,7 @@
     .lang-btn{border:none;padding:14px;border-radius:14px;cursor:pointer;background:#fff;position:relative;z-index:10004;pointer-events:auto}
     .step{display:none}
     .step.active{display:block}
-    .cta{width:100%;border:none;border-radius:14px;padding:12px 14px;font-weight:700;background:var(--accent);color:#fff;cursor:pointer;margin-top:16px}
+    .cta{width:100%;border:none;border-radius:14px;padding:12px 14px;font-weight:700;background:linear-gradient(135deg,#5b7cfa,#7e96ff);color:#fff;cursor:pointer;margin-top:16px;box-shadow:0 10px 20px rgba(91,124,250,.28),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .15s ease,box-shadow .15s ease}.cta:active{transform:translateY(1px) scale(.995);box-shadow:0 6px 12px rgba(91,124,250,.24)}
     header{display:flex;align-items:center;justify-content:space-between;margin:8px 0 14px;position:relative}
     .brand{font-weight:900;font-size:26px;letter-spacing:.2px}
     .icon-btn{width:42px;height:42px;border-radius:21px;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -72,6 +72,31 @@
     .input{width:100%;padding:10px;border:1px solid #cdd7ff;border-radius:10px;background:rgba(255,255,255,.85)}
     .ad-box{display:flex;justify-content:center;align-items:center;min-height:260px}
   </style>
+
+  <script>
+    (function(){
+      window.openLanguageDirect = function(){
+        var intro=document.getElementById('introVideo');
+        var splash=document.getElementById('splash');
+        var language=document.getElementById('language');
+        if (intro) intro.classList.add('hidden');
+        if (splash) splash.classList.add('hidden');
+        if (language) language.classList.remove('hidden');
+      };
+      window.openOnboardDirect = function(){
+        var language=document.getElementById('language');
+        var onboard=document.getElementById('onboard');
+        if (language) language.classList.add('hidden');
+        if (onboard) onboard.classList.remove('hidden');
+      };
+      document.addEventListener('click', function(e){
+        var id = e.target && e.target.id;
+        if (id === 'skipIntro' || id === 'splashContinue') window.openLanguageDirect();
+        if (id === 'langContinue') window.openOnboardDirect();
+      }, true);
+    })();
+  </script>
+
   <script src="//my-pu.sh/66d4bd96d86c3a4a0f2c/bf6f53703b/?placementName=default"></script>
 </head>
 <body>
