@@ -48,11 +48,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://telegram.org", "https://www.gstatic.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://telegram.org", "https://www.gstatic.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://my-pu.sh", "https://data527.click"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "https:"],
       mediaSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'", "https://api.binance.com", "https://*.firebaseapp.com", "https://*.firebaseio.com"],
+      connectSrc: ["'self'", "https://api.binance.com", "https://*.firebaseapp.com", "https://*.firebaseio.com", "https://lottie.host", "https://assets*.lottiefiles.com"],
       frameSrc: ["'self'", "https://*.firebaseapp.com"]
     }
   },
@@ -81,17 +81,13 @@ app.use(mongoSanitize());
 app.use(xss());
 app.use(hpp());
 
-// Rate limiting
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, message: { error: 'Too many requests' } });
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use('/api/', limiter);
 const strictLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 10 });
 app.use('/api/play-session', strictLimiter);
-app.use('/api/withdrawal', strictLimiter);
 
 // ======================== YARDIMCILAR ========================
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim()).filter(id => id);
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const BOT_USERNAME = process.env.BOT_USERNAME || 'VariaGAME_bot';
 const REF_BONUS = 0.015;
 const BASE_RATE = 0.001;
 const DAILY_LIMIT = 240;
@@ -101,17 +97,6 @@ const handleValidationErrors = (req, res, next) => {
   if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
   next();
 };
-
-async function sendTelegramMessage(chatId, text) {
-  if (!TELEGRAM_BOT_TOKEN || !chatId) return;
-  try {
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
-    });
-  } catch (e) {}
-}
 
 function generateRefCode(userId) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -145,7 +130,6 @@ app.get('/api/config', (req, res) => {
     appId: process.env.FIREBASE_APP_ID,
     measurementId: process.env.FIREBASE_MEASUREMENT_ID || null,
     adminIds: ADMIN_IDS,
-    botUsername: BOT_USERNAME,
     refBonus: REF_BONUS
   });
 });
@@ -163,7 +147,7 @@ app.get('/api/user/ref-link',
         refCode = generateRefCode(userId);
         await userRef.set({ refCode, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
       }
-      res.json({ success: true, refCode, refLink: `https://t.me/${BOT_USERNAME}?start=${refCode}` });
+      res.json({ success: true, refCode, refLink: `https://t.me/${process.env.BOT_USERNAME || 'VariaGAME_bot'}?start=${refCode}` });
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
@@ -204,22 +188,18 @@ app.post('/api/referral/process',
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
       });
-      const referrerData = referrerDoc.data();
-      if (referrerData.telegramId) await sendTelegramMessage(referrerData.telegramId, `🎉 +$${REF_BONUS.toFixed(3)} referral!`);
       res.json({ success: true });
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
-// AFK korumalı oyun oturumu (sadece oyunda aktif süre)
 app.post('/api/play-session',
   body('userId').isString().notEmpty().trim().escape(),
   body('minutes').isFloat({ min: 0.1, max: 240 }),
-  body('gameTitle').optional().isString().trim().escape(),
   body('isAfk').optional().isBoolean(),
   handleValidationErrors,
   async (req, res) => {
-    const { userId, minutes, gameTitle, isAfk } = req.body;
-    if (isAfk) return res.json({ success: false, message: 'AFK detected, no reward' });
+    const { userId, minutes, isAfk } = req.body;
+    if (isAfk) return res.json({ success: false, message: 'AFK detected' });
     
     try {
       const userRef = db.collection('users').doc(userId);
@@ -239,7 +219,6 @@ app.post('/api/play-session',
       const earned = allowed * rate;
       
       await db.runTransaction(async (t) => {
-        const doc = await t.get(userRef);
         t.update(userRef, {
           balance: admin.firestore.FieldValue.increment(earned),
           totalMinutes: admin.firestore.FieldValue.increment(allowed),
@@ -250,7 +229,7 @@ app.post('/api/play-session',
           lastUpdate: admin.firestore.FieldValue.serverTimestamp()
         });
         t.set(db.collection('playSessions').doc(), {
-          userId, minutes: allowed, earned, gameTitle: gameTitle || 'Unknown',
+          userId, minutes: allowed, earned,
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
       });
@@ -258,7 +237,7 @@ app.post('/api/play-session',
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
-// Admin
+// Admin API
 app.get('/api/admin/users', async (req, res) => {
   if (!ADMIN_IDS.includes(req.query.userId)) return res.status(403).json({ error: 'Unauthorized' });
   const snapshot = await db.collection('users').limit(50).get();
@@ -281,32 +260,23 @@ app.post('/api/admin/update-user',
     res.json({ success: true });
 });
 
-// Ana sayfa
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// ======================== RENDER UYKU MODU ENGELLEME ========================
+// ======================== RENDER KEEP-ALIVE ========================
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 cron.schedule('*/10 * * * *', async () => {
-  try {
-    await fetch(APP_URL);
-    console.log('✅ Keep-alive ping');
-  } catch (e) {
-    console.error('❌ Keep-alive hatası:', e.message);
-  }
+  try { await fetch(APP_URL); console.log('✅ Keep-alive'); } catch (e) {}
 });
 
-// Günlük sıfırlama
 cron.schedule('0 0 * * *', async () => {
   const snapshot = await db.collection('users').get();
   const batch = db.batch();
   snapshot.docs.forEach(doc => batch.update(doc.ref, { todayPlayed: 0, lastReset: new Date().toISOString().split('T')[0] }));
   await batch.commit().catch(() => {});
-  console.log('✅ Günlük sıfırlama');
 });
 
-// ======================== HATA VE SUNUCU ========================
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, next) => res.status(500).json({ error: 'Server error' }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server ${PORT} | Keep-alive aktif | AFK korumalı`));
+app.listen(PORT, () => console.log(`🚀 Server ${PORT}`));
