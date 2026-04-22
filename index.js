@@ -11,10 +11,9 @@ const { body, query, validationResult } = require('express-validator');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 const xss = require('xss-clean');
-const csrf = require('csurf');
+const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const compression = require('compression');
 const morgan = require('morgan');
 const fs = require('fs');
 const rfs = require('rotating-file-stream');
@@ -22,19 +21,13 @@ const rfs = require('rotating-file-stream');
 // ======================== LOGLAMA ========================
 const logDirectory = path.join(__dirname, 'logs');
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);
-const accessLogStream = rfs.createStream('access.log', {
-  interval: '1d',
-  path: logDirectory
-});
+const accessLogStream = rfs.createStream('access.log', { interval: '1d', path: logDirectory });
 
-// ======================== FIREBASE ========================
+// ======================== FIREBASE ADMIN ========================
 try {
   if (!admin.apps.length) {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY 
-      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') 
-      : undefined;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
     if (!privateKey) throw new Error('FIREBASE_PRIVATE_KEY eksik');
-    
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
@@ -50,7 +43,7 @@ const db = admin.firestore();
 
 const app = express();
 
-// ======================== TEMEL GÜVENLİK ========================
+// ======================== GÜVENLİK MIDDLEWARE ========================
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -68,7 +61,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'],
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
   credentials: true
 }));
 
@@ -78,45 +71,22 @@ app.use(express.json({ limit: '500kb' }));
 app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 app.use(cookieParser());
 app.use(session({
-  secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
+  secret: process.env.SESSION_SECRET || 'fallback-secret',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, sameSite: 'strict' }
 }));
 
-// NoSQL injection & XSS sanitization
 app.use(mongoSanitize());
 app.use(xss());
-app.use(hpp()); // HTTP Parameter Pollution
+app.use(hpp());
 
-// ======================== RATE LIMIT ========================
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: 'Too many requests' },
-  standardHeaders: true,
-  legacyHeaders: false
-});
+// Rate limiting
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, message: { error: 'Too many requests' } });
 app.use('/api/', limiter);
-
-const strictLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 10,
-  message: { error: 'Too many sensitive requests' }
-});
+const strictLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 10 });
 app.use('/api/play-session', strictLimiter);
 app.use('/api/withdrawal', strictLimiter);
-
-// ======================== CSRF KORUMASI ========================
-const csrfProtection = csrf({ cookie: true });
-app.use(csrfProtection);
-app.use((req, res, next) => {
-  res.cookie('XSRF-TOKEN', req.csrfToken(), { httpOnly: false, secure: process.env.NODE_ENV === 'production' });
-  next();
-});
-
-// API route'ları CSRF'den muaf tut (Telegram WebApp kendi güvenliğini sağlar)
-const csrfExempt = (req, res, next) => next();
 
 // ======================== YARDIMCILAR ========================
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim()).filter(id => id);
@@ -159,18 +129,13 @@ app.use(express.static(path.join(__dirname, 'public'), {
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Cache-Control', 'public, max-age=86400');
     }
-    if (filePath.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-    // Güvenlik başlıkları
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   }
 }));
 
 // ======================== API ========================
-app.get('/api/config', csrfExempt, (req, res) => {
+app.get('/api/config', (req, res) => {
   res.json({
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -186,7 +151,6 @@ app.get('/api/config', csrfExempt, (req, res) => {
 });
 
 app.get('/api/user/ref-link',
-  csrfExempt,
   query('userId').isString().notEmpty().trim().escape(),
   handleValidationErrors,
   async (req, res) => {
@@ -204,7 +168,6 @@ app.get('/api/user/ref-link',
 });
 
 app.post('/api/referral/process',
-  csrfExempt,
   body('newUserId').isString().notEmpty().trim().escape(),
   body('refCode').isString().notEmpty().trim().escape(),
   handleValidationErrors,
@@ -212,14 +175,14 @@ app.post('/api/referral/process',
     const { newUserId, refCode } = req.body;
     try {
       const usersSnapshot = await db.collection('users').where('refCode', '==', refCode).limit(1).get();
-      if (usersSnapshot.empty) return res.json({ success: false, message: 'Invalid referral code' });
+      if (usersSnapshot.empty) return res.json({ success: false });
       const referrerDoc = usersSnapshot.docs[0];
       const referrerId = referrerDoc.id;
-      if (referrerId === newUserId) return res.json({ success: false, message: 'Cannot refer yourself' });
+      if (referrerId === newUserId) return res.json({ success: false });
       
       const newUserRef = db.collection('users').doc(newUserId);
       const newUserDoc = await newUserRef.get();
-      if (newUserDoc.exists && newUserDoc.data().referredBy) return res.json({ success: false, message: 'Already referred' });
+      if (newUserDoc.exists && newUserDoc.data().referredBy) return res.json({ success: false });
       
       await db.runTransaction(async (t) => {
         t.set(newUserRef, {
@@ -242,19 +205,22 @@ app.post('/api/referral/process',
         });
       });
       const referrerData = referrerDoc.data();
-      if (referrerData.telegramId) await sendTelegramMessage(referrerData.telegramId, `🎉 Yeni davet! +$${REF_BONUS.toFixed(3)}`);
-      res.json({ success: true, referrerId });
+      if (referrerData.telegramId) await sendTelegramMessage(referrerData.telegramId, `🎉 +$${REF_BONUS.toFixed(3)} referral!`);
+      res.json({ success: true });
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
+// AFK korumalı oyun oturumu (sadece oyunda aktif süre)
 app.post('/api/play-session',
-  csrfExempt,
   body('userId').isString().notEmpty().trim().escape(),
   body('minutes').isFloat({ min: 0.1, max: 240 }),
   body('gameTitle').optional().isString().trim().escape(),
+  body('isAfk').optional().isBoolean(),
   handleValidationErrors,
   async (req, res) => {
-    const { userId, minutes, gameTitle } = req.body;
+    const { userId, minutes, gameTitle, isAfk } = req.body;
+    if (isAfk) return res.json({ success: false, message: 'AFK detected, no reward' });
+    
     try {
       const userRef = db.collection('users').doc(userId);
       const userDoc = await userRef.get();
@@ -292,15 +258,14 @@ app.post('/api/play-session',
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
-// Admin API'leri
-app.get('/api/admin/users', csrfProtection, async (req, res) => {
-  const { userId } = req.query;
-  if (!ADMIN_IDS.includes(userId)) return res.status(403).json({ error: 'Unauthorized' });
+// Admin
+app.get('/api/admin/users', async (req, res) => {
+  if (!ADMIN_IDS.includes(req.query.userId)) return res.status(403).json({ error: 'Unauthorized' });
   const snapshot = await db.collection('users').limit(50).get();
   res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
 });
 
-app.post('/api/admin/update-user', csrfProtection,
+app.post('/api/admin/update-user',
   body('adminId').isString().notEmpty(),
   body('targetUserId').isString().notEmpty(),
   body('balance').optional().isFloat({ min: 0 }),
@@ -316,25 +281,32 @@ app.post('/api/admin/update-user', csrfProtection,
     res.json({ success: true });
 });
 
-// ======================== ANA SAYFA & CRON ========================
-app.get('/', csrfExempt, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+// Ana sayfa
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
+// ======================== RENDER UYKU MODU ENGELLEME ========================
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 cron.schedule('*/10 * * * *', async () => {
-  try { await fetch(process.env.APP_URL || 'http://localhost:3000'); } catch (e) {}
+  try {
+    await fetch(APP_URL);
+    console.log('✅ Keep-alive ping');
+  } catch (e) {
+    console.error('❌ Keep-alive hatası:', e.message);
+  }
 });
+
+// Günlük sıfırlama
 cron.schedule('0 0 * * *', async () => {
   const snapshot = await db.collection('users').get();
   const batch = db.batch();
   snapshot.docs.forEach(doc => batch.update(doc.ref, { todayPlayed: 0, lastReset: new Date().toISOString().split('T')[0] }));
   await batch.commit().catch(() => {});
+  console.log('✅ Günlük sıfırlama');
 });
 
-// ======================== HATA YÖNETİMİ ========================
+// ======================== HATA VE SUNUCU ========================
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error' });
-});
+app.use((err, req, res, next) => res.status(500).json({ error: 'Server error' }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Güvenli sunucu ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server ${PORT} | Keep-alive aktif | AFK korumalı`));
