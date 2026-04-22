@@ -18,7 +18,7 @@ const { body, query, validationResult } = require('express-validator');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`;
+const APP_URL = process.env.APP_URL || 'https://variagame.onrender.com';
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map((id) => id.trim()).filter(Boolean);
 const DAILY_LIMIT_MINUTES = 240;
 const BASE_RATE = 0.001;

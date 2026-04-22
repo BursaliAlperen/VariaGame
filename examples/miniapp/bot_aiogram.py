@@ -4,7 +4,7 @@ Kurulum:
 
 .env:
   BOT_TOKEN=123456:ABC
-  WEB_APP_URL=https://your-domain.com/examples/miniapp/index.html
+  WEB_APP_URL=https://variagame.onrender.com/examples/miniapp/index.html
   BOT_USERNAME=MyBot
 """
 
