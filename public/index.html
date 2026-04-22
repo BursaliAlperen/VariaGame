@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>VARIA ✦ Play & Earn</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -16,67 +17,76 @@
     @keyframes fadeIn { 0%{opacity:0;transform:translateY(10px);} 100%{opacity:1;transform:translateY(0);} }
     @keyframes spin { 100%{transform:rotate(360deg);} }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    @keyframes slideDown { 0%{opacity:0;transform:translateY(-20px);} 100%{opacity:1;transform:translateY(0);} }
     
-    /* Video */
+    /* Video Splash */
     .video-full { position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:9999; }
     .video-full video { width:100%; height:100%; object-fit:cover; }
-    .skip-btn { position:absolute; bottom:30px; right:20px; background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); color:white; padding:14px 28px; border-radius:60px; font-weight:600; z-index:10000; cursor:pointer; border:1px solid rgba(255,255,255,0.2); transition:0.2s; }
-    .skip-btn:hover { background:#6c47ff; }
+    .skip-btn { position:absolute; bottom:30px; right:20px; background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); color:white; padding:14px 28px; border-radius:60px; font-weight:600; z-index:10000; cursor:pointer; border:1px solid rgba(255,255,255,0.2); }
+    
+    /* Oyun Loading - ATLANAMAYAN */
+    .game-loading-full { position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:10001; display:none; }
+    .game-loading-full video { width:100%; height:100%; object-fit:cover; }
     
     /* Splash */
     .splash { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .splash-icon { font-size:80px; color:#6c47ff; margin-bottom:24px; animation:pulse 2s infinite; }
-    .splash-title { font-size:36px; font-weight:900; background:linear-gradient(135deg,#6c47ff,#8b6cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
-    .splash-sub { color:#7c8db0; margin-top:8px; letter-spacing:6px; font-weight:500; }
+    .splash.hidden { display:none; }
+    .splash-title { font-size:36px; font-weight:900; background:linear-gradient(135deg,#6c47ff,#8b6cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     
-    /* Dil */
-    .lang-select { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9997; display:flex; flex-direction:column; justify-content:center; padding:24px; }
+    /* Dil Seçimi */
+    .lang-select { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9997; display:flex; flex-direction:column; justify-content:center; padding:20px; }
     .lang-select.hidden { display:none; }
-    .lang-title { font-size:2.2rem; font-weight:800; color:#1e293b; margin-bottom:32px; text-align:center; }
-    .lang-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-    .lang-btn { background:white; border:2px solid transparent; border-radius:28px; padding:24px; text-align:center; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.04); transition:0.2s; }
-    .lang-btn i { font-size:2.8rem; margin-bottom:8px; }
-    .lang-btn span { display:block; color:#1e293b; font-weight:700; }
+    .lang-title { font-size:2rem; font-weight:800; color:#1e293b; margin-bottom:28px; text-align:center; }
+    .lang-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .lang-btn { background:white; border:2px solid transparent; border-radius:24px; padding:18px 12px; text-align:center; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.02); transition:0.2s; }
+    .lang-btn span { display:block; color:#1e293b; font-weight:600; font-size:0.9rem; margin-top:6px; }
+    .lang-btn .flag-emoji { font-size:2.5rem; }
     .lang-btn.active { border-color:#6c47ff; background:#f5f3ff; }
     
     /* Onboarding */
     .onboard { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9997; display:flex; flex-direction:column; justify-content:center; padding:24px; }
     .onboard.hidden { display:none; }
     .onboard-step { display:none; } .onboard-step.active { display:block; animation:fadeIn 0.4s; }
-    .onboard-title { font-size:2.2rem; font-weight:800; color:#1e293b; margin-bottom:12px; text-align:center; }
-    .onboard-desc { color:#64748b; margin-bottom:32px; text-align:center; }
-    .options { display:grid; gap:14px; margin-bottom:36px; }
+    .onboard-title { font-size:2rem; font-weight:800; color:#1e293b; margin-bottom:12px; text-align:center; }
+    .options { display:grid; gap:12px; margin-bottom:32px; }
     .opt-3 { grid-template-columns:repeat(3,1fr); } .opt-2 { grid-template-columns:repeat(2,1fr); }
-    .opt-btn { background:white; border:2px solid transparent; border-radius:24px; padding:20px 8px; text-align:center; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.02); transition:0.2s; }
-    .opt-btn i { font-size:2.2rem; color:#6c47ff; margin-bottom:8px; }
-    .opt-btn span { color:#1e293b; font-weight:600; }
+    .opt-btn { background:white; border:2px solid transparent; border-radius:20px; padding:18px 6px; text-align:center; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.02); }
+    .opt-btn i { font-size:2rem; color:#6c47ff; margin-bottom:6px; }
+    .opt-btn span { color:#1e293b; font-weight:600; font-size:0.85rem; }
     .opt-btn.active { border-color:#6c47ff; background:#f5f3ff; }
-    .next-btn { background:#6c47ff; color:white; border:none; border-radius:60px; padding:18px; font-weight:700; font-size:1.2rem; width:100%; cursor:pointer; box-shadow:0 8px 24px rgba(108,71,255,0.2); transition:0.2s; }
-    .next-btn:active { transform:scale(0.98); }
+    .next-btn { background:#6c47ff; color:white; border:none; border-radius:60px; padding:18px; font-weight:700; font-size:1.1rem; width:100%; cursor:pointer; }
     
     /* Loading */
     .loading { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9996; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .spinner { width:56px; height:56px; border:4px solid #e2e8f0; border-top-color:#6c47ff; border-radius:50%; animation:spin 0.8s infinite; }
+    .loading.hidden { display:none; }
     
-    /* Ana */
+    /* Ana Uygulama */
     .main-app { display:none; } .main-app.active { display:block; animation:fadeIn 0.5s; }
     
     /* Header */
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
-    .logo { font-size:2.2rem; font-weight:900; background:linear-gradient(135deg,#6c47ff,#8b6cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
-    .ton-ticker { display:flex; align-items:center; gap:8px; background:white; padding:10px 18px; border-radius:60px; box-shadow:0 4px 12px rgba(0,0,0,0.02); }
-    .ton-ticker i { color:#6c47ff; }
-    .ton-ticker span { color:#1e293b; font-weight:700; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; position:relative; }
+    .logo { display:flex; align-items:center; gap:8px; }
+    .logo-text { font-size:2rem; font-weight:900; background:linear-gradient(135deg,#6c47ff,#8b6cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .header-right { display:flex; align-items:center; gap:8px; }
+    .settings-btn { background:white; width:44px; height:44px; border-radius:22px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.02); cursor:pointer; color:#6c47ff; }
+    
+    /* Bildirim Dropdown */
+    .notification-dropdown { position:absolute; top:60px; right:0; background:white; border-radius:24px; padding:16px; width:280px; box-shadow:0 16px 40px rgba(0,0,0,0.1); z-index:100; display:none; animation:slideDown 0.2s; }
+    .notification-dropdown.show { display:block; }
+    
+    /* Ayarlar Menüsü */
+    .settings-menu { position:absolute; top:60px; right:0; background:white; border-radius:24px; padding:16px; width:220px; box-shadow:0 16px 40px rgba(0,0,0,0.1); z-index:101; display:none; animation:slideDown 0.2s; }
+    .settings-menu.show { display:block; }
+    .settings-item { display:flex; align-items:center; gap:12px; padding:14px; cursor:pointer; border-radius:16px; transition:0.2s; }
+    .settings-item:hover { background:#f5f3ff; }
+    .settings-item i { width:24px; color:#6c47ff; }
     
     /* Kullanıcı Kartı */
     .user-card { background:white; border-radius:32px; padding:18px; display:flex; align-items:center; gap:16px; margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.04); }
-    .avatar { width:56px; height:56px; border-radius:28px; background:linear-gradient(135deg,#6c47ff,#8b6cff); display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:white; font-weight:700; }
+    .avatar { width:56px; height:56px; border-radius:28px; background:linear-gradient(135deg,#6c47ff,#8b6cff); display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:white; font-weight:700; background-size:cover; }
     .user-info h3 { color:#1e293b; font-size:1.2rem; } .user-info p { color:#64748b; font-size:0.85rem; }
     .balance { background:#e6f7ec; padding:12px 18px; border-radius:60px; margin-left:auto; }
     .balance span { color:#10b981; font-weight:800; font-size:1.1rem; }
-    
-    /* Banner */
-    .ad-banner-container { margin-bottom:20px; display:flex; justify-content:center; background:white; border-radius:24px; padding:8px; box-shadow:0 4px 12px rgba(0,0,0,0.02); }
     
     /* Level Kartı */
     .stats-card { background:white; border-radius:32px; padding:24px; margin-bottom:24px; box-shadow:0 8px 24px rgba(0,0,0,0.04); }
@@ -87,502 +97,471 @@
     .progress-bar { height:8px; background:#eef2f6; border-radius:4px; margin:16px 0; }
     .progress-fill { height:100%; background:linear-gradient(90deg,#6c47ff,#8b6cff); border-radius:4px; width:0%; transition:width 0.3s; }
     .earning-row { display:flex; justify-content:space-between; color:#64748b; font-weight:500; }
-    .auto-pay { display:flex; align-items:center; justify-content:center; gap:10px; background:#f5f3ff; border-radius:60px; padding:14px; margin-top:16px; color:#6c47ff; font-weight:600; }
     
-    /* Kategoriler */
-    .category-tabs { display:flex; gap:10px; overflow-x:auto; padding:8px 0 20px; scrollbar-width:none; }
-    .category-tabs::-webkit-scrollbar { display:none; }
-    .cat-btn { background:white; border:1px solid #e2e8f0; padding:12px 22px; border-radius:60px; font-weight:600; color:#64748b; white-space:nowrap; cursor:pointer; transition:0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.02); }
-    .cat-btn.active { background:#6c47ff; border-color:#6c47ff; color:white; }
-    
-    /* Oyunlar */
-    .section-header { display:flex; justify-content:space-between; align-items:center; margin:24px 0 16px; }
-    .section-header h3 { color:#1e293b; font-size:1.3rem; }
-    .see-all { color:#6c47ff; font-weight:600; cursor:pointer; }
-    .game-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-    .game-card { background:white; border-radius:28px; padding:16px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.02); transition:0.2s; border:1px solid rgba(255,255,255,0.5); }
-    .game-card:active { transform:scale(0.98); }
-    .game-thumb { aspect-ratio:1; border-radius:20px; background:linear-gradient(145deg, #f5f3ff, #ede9fe); margin-bottom:14px; display:flex; align-items:center; justify-content:center; }
-    .game-thumb i { font-size:2.8rem; color:#6c47ff; }
-    .game-card h4 { color:#1e293b; font-size:1.1rem; margin-bottom:4px; }
-    .game-card p { color:#64748b; font-size:0.8rem; }
+    /* Oyun Durumu */
+    .game-status { display:flex; align-items:center; justify-content:center; gap:10px; background:#f5f3ff; border-radius:60px; padding:14px; margin-top:16px; }
+    .game-status.inactive { background:#fee2e2; }
     
     /* Sayfalar */
     .page { display:none; } .page.active { display:block; animation:fadeIn 0.3s; }
     
     /* Bottom Nav */
     .bottom-nav { position:fixed; bottom:0; left:0; right:0; max-width:428px; margin:0 auto; background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); padding:16px 24px; display:flex; justify-content:space-around; border-top:1px solid rgba(0,0,0,0.04); border-radius:40px 40px 0 0; }
-    .nav-item { display:flex; flex-direction:column; align-items:center; color:#94a3b8; cursor:pointer; font-size:0.75rem; gap:4px; transition:0.2s; }
+    .nav-item { display:flex; flex-direction:column; align-items:center; color:#94a3b8; cursor:pointer; font-size:0.75rem; gap:4px; }
     .nav-item i { font-size:1.5rem; }
     .nav-item.active { color:#6c47ff; }
+    
+    /* Oyun Kartları */
+    .game-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .game-card { background:white; border-radius:28px; padding:16px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.02); transition:0.2s; }
+    .game-card:active { transform:scale(0.98); }
+    .game-thumb { aspect-ratio:1; border-radius:20px; background:linear-gradient(145deg, #f5f3ff, #ede9fe); margin-bottom:14px; display:flex; align-items:center; justify-content:center; }
+    .game-thumb i { font-size:2.8rem; color:#6c47ff; }
+    .game-card h4 { color:#1e293b; font-size:1.1rem; margin-bottom:4px; }
     
     /* Modal */
     .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(8px); z-index:1000; align-items:flex-end; }
     .modal.active { display:flex; }
-    .modal-content { background:white; border-radius:36px 36px 0 0; width:100%; max-width:428px; padding:32px 24px; animation:fadeIn 0.3s; }
+    .modal-content { background:white; border-radius:36px 36px 0 0; width:100%; max-width:428px; padding:32px 24px; animation:fadeIn 0.3s; max-height:80vh; overflow-y:auto; }
     .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
     .modal-close { cursor:pointer; font-size:1.5rem; color:#94a3b8; }
-    .task-indicator { width:90px; height:90px; border-radius:45px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:800; margin:24px auto; color:#1e293b; }
-    .task-indicator.done { background:#10b981; color:white; }
-    .ad-btn { background:#6c47ff; color:white; padding:18px; border:none; border-radius:60px; width:100%; font-weight:700; font-size:1.1rem; cursor:pointer; }
-    
-    /* Referans */
-    .ref-card { background:white; border-radius:32px; padding:32px 24px; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.04); }
-    .ref-icon { font-size:3rem; color:#6c47ff; margin-bottom:16px; }
-    .ref-title { font-size:1.5rem; font-weight:800; color:#1e293b; margin-bottom:8px; }
-    .ref-desc { color:#64748b; margin-bottom:24px; }
-    .ref-link-box { background:#f8fafc; border:2px dashed #6c47ff; border-radius:20px; padding:16px; margin-bottom:20px; color:#1e293b; font-weight:600; word-break:break-all; }
-    .ref-actions { display:flex; gap:12px; }
-    .ref-btn { flex:1; background:#6c47ff; color:white; border:none; padding:16px; border-radius:60px; font-weight:700; cursor:pointer; }
-    .ref-btn.share { background:#10b981; }
     
     /* Toast */
-    .toast { position:fixed; bottom:100px; left:20px; right:20px; max-width:388px; margin:0 auto; background:#1e293b; color:white; padding:16px 24px; border-radius:60px; display:none; z-index:200; text-align:center; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); }
-    .toast.show { display:block; animation:fadeIn 0.3s; }
+    .toast-container { position:fixed; top:80px; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:8px; z-index:300; pointer-events:none; }
+    .toast-notification { background:#1e293b; color:white; padding:12px 24px; border-radius:60px; font-weight:600; animation:slideDown 0.3s; display:flex; align-items:center; gap:10px; }
+    .toast-notification.success { background:#10b981; }
   </style>
 </head>
 <body>
 
-<!-- CLASSIC PUSH -->
-<script type="text/javascript" src="//my-pu.sh/66d4bd96d86c3a4a0f2c/bf6f53703b/?placementName=default"></script>
-
-<!-- POPUP -->
-<script type="text/javascript" src="//data527.click/b22c46084b4c72cc2e0a/366ede0d91/?placementName=default"></script>
-
-<!-- REDIRECT -->
-<script type="text/javascript" src="//data527.click/987d0dd13b773be13cad/65cb1724bc/?placementName=default"></script>
-
+<!-- Video Splash -->
 <div class="video-full" id="videoContainer">
   <video id="loadingVideo" autoplay muted playsinline preload="auto">
     <source src="loading.mp4" type="video/mp4">
   </video>
-  <div class="skip-btn" onclick="window.skipVideo()">Skip <i class="fas fa-forward"></i></div>
+  <div class="skip-btn" id="skipButton">Skip <i class="fas fa-forward"></i></div>
 </div>
 
-<div class="splash" id="splashScreen" style="display:none;">
-  <div class="splash-icon"><i class="fas fa-crown"></i></div>
+<!-- Oyun Loading -->
+<div class="game-loading-full" id="gameLoadingContainer">
+  <video id="gameLoadingVideo" muted playsinline preload="auto">
+    <source src="game_loading.mp4" type="video/mp4">
+  </video>
+</div>
+
+<!-- Splash -->
+<div class="splash hidden" id="splashScreen">
+  <lottie-player src="https://lottie.host/4db842b3-5c7e-4f1a-9b8e-2d3c4e5f6a7b/8gHjKlMnOp.json" background="transparent" speed="1" style="width:150px;height:150px;margin-bottom:20px;" loop autoplay></lottie-player>
   <div class="splash-title">VARIA GAMES</div>
   <div class="splash-sub">✦ play & earn ✦</div>
 </div>
 
+<!-- Dil Seçimi -->
 <div class="lang-select hidden" id="languageSelector">
   <div class="lang-title"><i class="fas fa-globe"></i> Select Language</div>
   <div class="lang-grid">
-    <div class="lang-btn active" data-lang="en" onclick="window.selectLanguage('en')"><i class="fas fa-flag-usa"></i><span>English</span></div>
-    <div class="lang-btn" data-lang="tr" onclick="window.selectLanguage('tr')"><i class="fas fa-flag"></i><span>Türkçe</span></div>
-    <div class="lang-btn" data-lang="ru" onclick="window.selectLanguage('ru')"><i class="fas fa-flag"></i><span>Русский</span></div>
-    <div class="lang-btn" data-lang="es" onclick="window.selectLanguage('es')"><i class="fas fa-flag"></i><span>Español</span></div>
+    <div class="lang-btn active" data-lang="en"><span class="flag-emoji">🇺🇸</span><span>English</span></div>
+    <div class="lang-btn" data-lang="tr"><span class="flag-emoji">🇹🇷</span><span>Türkçe</span></div>
+    <div class="lang-btn" data-lang="ru"><span class="flag-emoji">🇷🇺</span><span>Русский</span></div>
+    <div class="lang-btn" data-lang="es"><span class="flag-emoji">🇪🇸</span><span>Español</span></div>
+    <div class="lang-btn" data-lang="de"><span class="flag-emoji">🇩🇪</span><span>Deutsch</span></div>
+    <div class="lang-btn" data-lang="fr"><span class="flag-emoji">🇫🇷</span><span>Français</span></div>
+    <div class="lang-btn" data-lang="ar"><span class="flag-emoji">🇸🇦</span><span>العربية</span></div>
+    <div class="lang-btn" data-lang="zh"><span class="flag-emoji">🇨🇳</span><span>中文</span></div>
   </div>
-  <button class="next-btn" onclick="window.confirmLanguage()" style="margin-top:32px;">Continue <i class="fas fa-arrow-right"></i></button>
+  <button class="next-btn" id="confirmLangBtn">Continue <i class="fas fa-arrow-right"></i></button>
 </div>
 
+<!-- Onboarding -->
 <div class="onboard hidden" id="onboarding">
   <div class="onboard-step active" data-step="1">
     <div class="onboard-title">How old are you?</div>
-    <div class="onboard-desc">We'll recommend games you'll love</div>
     <div class="options opt-3">
-      <div class="opt-btn" onclick="window.selectAge('under18')"><i class="fas fa-child"></i><span>Under 18</span></div>
-      <div class="opt-btn" onclick="window.selectAge('18-24')"><i class="fas fa-user"></i><span>18-24</span></div>
-      <div class="opt-btn" onclick="window.selectAge('25plus')"><i class="fas fa-user-tie"></i><span>25+</span></div>
+      <div class="opt-btn" data-age="under18"><i class="fas fa-child"></i><span>Under 18</span></div>
+      <div class="opt-btn" data-age="18-24"><i class="fas fa-user"></i><span>18-24</span></div>
+      <div class="opt-btn" data-age="25plus"><i class="fas fa-user-tie"></i><span>25+</span></div>
     </div>
-    <button class="next-btn" onclick="window.nextOnboardingStep(2)">Continue</button>
+    <button class="next-btn" id="onboardNext1">Continue</button>
   </div>
   <div class="onboard-step" data-step="2">
     <div class="onboard-title">Favorite genres?</div>
     <div class="options opt-2">
-      <div class="opt-btn" onclick="window.selectGenre('action')"><i class="fas fa-fist-raised"></i><span>Action</span></div>
-      <div class="opt-btn" onclick="window.selectGenre('puzzle')"><i class="fas fa-puzzle-piece"></i><span>Puzzle</span></div>
-      <div class="opt-btn" onclick="window.selectGenre('racing')"><i class="fas fa-flag-checkered"></i><span>Racing</span></div>
-      <div class="opt-btn" onclick="window.selectGenre('sports')"><i class="fas fa-futbol"></i><span>Sports</span></div>
+      <div class="opt-btn" data-genre="action"><i class="fas fa-fist-raised"></i><span>Action</span></div>
+      <div class="opt-btn" data-genre="puzzle"><i class="fas fa-puzzle-piece"></i><span>Puzzle</span></div>
+      <div class="opt-btn" data-genre="racing"><i class="fas fa-flag-checkered"></i><span>Racing</span></div>
+      <div class="opt-btn" data-genre="sports"><i class="fas fa-futbol"></i><span>Sports</span></div>
     </div>
-    <button class="next-btn" onclick="window.nextOnboardingStep(3)">Continue</button>
+    <button class="next-btn" id="onboardNext2">Continue</button>
   </div>
   <div class="onboard-step" data-step="3">
     <div class="onboard-title">Play frequency?</div>
     <div class="options opt-3">
-      <div class="opt-btn" onclick="window.selectFrequency('daily')"><i class="fas fa-calendar-check"></i><span>Daily</span></div>
-      <div class="opt-btn" onclick="window.selectFrequency('weekly')"><i class="fas fa-calendar-week"></i><span>Weekly</span></div>
-      <div class="opt-btn" onclick="window.selectFrequency('casual')"><i class="fas fa-calendar"></i><span>Casual</span></div>
+      <div class="opt-btn" data-freq="daily"><i class="fas fa-calendar-check"></i><span>Daily</span></div>
+      <div class="opt-btn" data-freq="weekly"><i class="fas fa-calendar-week"></i><span>Weekly</span></div>
+      <div class="opt-btn" data-freq="casual"><i class="fas fa-calendar"></i><span>Casual</span></div>
     </div>
-    <button class="next-btn" onclick="window.completeOnboarding()">Start Playing</button>
+    <button class="next-btn" id="onboardNext3">Start Playing</button>
   </div>
 </div>
 
-<div class="loading" id="dbLoading"><div class="spinner"></div><p style="margin-top:20px; color:#64748b; font-weight:500;">Connecting to server...</p></div>
+<!-- Loading -->
+<div class="loading" id="dbLoading">
+  <lottie-player src="https://lottie.host/1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d/AbCdEfGhIj.json" background="transparent" speed="1" style="width:100px;height:100px;" loop autoplay></lottie-player>
+  <p style="margin-top:16px; color:#64748b;">Connecting...</p>
+</div>
 
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Ana Uygulama -->
 <div class="main-app" id="mainApp">
   <div class="app">
     <div class="header">
-      <div class="logo">VARIA</div>
-      <div class="ton-ticker"><i class="fas fa-circle" style="color:#10b981; font-size:10px;"></i> TON $<span id="tonPrice">2.45</span></div>
+      <div class="logo">
+        <lottie-player src="https://lottie.host/4db842b3-5c7e-4f1a-9b8e-2d3c4e5f6a7b/8gHjKlMnOp.json" background="transparent" speed="1" style="width:40px;height:40px;" loop autoplay></lottie-player>
+        <span class="logo-text">VARIA</span>
+      </div>
+      <div class="header-right">
+        <div class="settings-btn" id="notificationBtn"><i class="far fa-bell"></i></div>
+        <div class="settings-btn" id="settingsBtn"><i class="fas fa-gear"></i></div>
+      </div>
+      
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div style="font-weight:700;">Notifications</div>
+        <div id="notificationList"></div>
+      </div>
+      
+      <div class="settings-menu" id="settingsMenu">
+        <div class="settings-item" id="currencySetting"><i class="fas fa-coins"></i><span>Currency: <span id="settingsCurrency">USD</span></span></div>
+        <div class="settings-item" id="soundSetting"><i class="fas fa-volume-high"></i><span>Sound: On</span></div>
+      </div>
     </div>
     
     <div class="user-card">
       <div class="avatar" id="avatar">V</div>
       <div class="user-info"><h3 id="userName">Player</h3><p id="userUsername">@username</p></div>
-      <div class="balance"><i class="fas fa-dollar-sign" style="margin-right:2px;"></i><span id="balance">0.00</span></div>
-    </div>
-    
-    <!-- 300x250 BANNER -->
-    <div class="ad-banner-container">
-      <ins style="width:300px;height:250px;display:block;" data-width="300" data-height="250" class="h76eb524ab3" data-domain="//data527.click" data-affquery="/3553437874069ba24832/76eb524ab3/?placementName=default">
-        <script src="//data527.click/js/responsive.js" async></script>
-      </ins>
+      <div class="balance"><span id="balanceDisplay">0.00</span> <span id="currencySymbol">$</span></div>
     </div>
     
     <div class="stats-card">
       <div class="level-row">
-        <span class="level-badge"><i class="fas fa-crown" style="margin-right:6px;"></i>Level <span id="level">1</span></span>
-        <span class="limit-badge" id="limitBadge"><i class="fas fa-clock" style="margin-right:6px;"></i><span id="playedToday">0</span>/240 min</span>
+        <span class="level-badge"><i class="fas fa-crown"></i> Level <span id="level">1</span></span>
+        <span class="limit-badge" id="limitBadge"><i class="fas fa-clock"></i> <span id="playedToday">0</span>/240m</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="xpFill" style="width:0%"></div></div>
       <div class="earning-row">
-        <span><span id="xp">0</span> / <span id="xpNext">500</span> XP</span>
-        <span><i class="fas fa-bolt" style="color:#6c47ff;"></i> $<span id="earningRate">0.0010</span>/min</span>
+        <span><span id="xp">0</span>/<span id="xpNext">500</span> XP</span>
+        <span><span id="earningRate">0.0010</span>/min</span>
       </div>
-      <div class="auto-pay">
-        <i class="fas fa-sync-alt fa-spin"></i>
-        <span>Next payment in</span>
-        <span id="paymentTimer" style="font-weight:800;">60s</span>
+      <div class="game-status" id="gameStatus">
+        <i class="fas fa-gamepad"></i>
+        <span id="gameStatusText">No active game</span>
       </div>
     </div>
     
+    <!-- HOME -->
     <div class="page active" id="homePage">
-      <div class="section-header">
+      <div style="display:flex; justify-content:space-between; margin:20px 0 16px;">
         <h3>Featured Games</h3>
-        <span class="see-all" onclick="window.switchPage('games')">See All <i class="fas fa-arrow-right"></i></span>
+        <span onclick="switchPage('games')" style="color:#6c47ff; cursor:pointer;">See All →</span>
       </div>
       <div class="game-grid" id="featuredGames"></div>
     </div>
     
+    <!-- GAMES -->
     <div class="page" id="gamesPage">
-      <div class="category-tabs" id="categoryTabs"></div>
       <div class="game-grid" id="allGamesGrid"></div>
     </div>
     
+    <!-- REFERRAL -->
     <div class="page" id="referralPage">
-      <div class="ref-card">
-        <div class="ref-icon"><i class="fas fa-users"></i></div>
-        <div class="ref-title">Invite Friends & Earn</div>
-        <div class="ref-desc">Get <strong style="color:#10b981;">+$0.15</strong> for each friend!</div>
-        <div class="ref-link-box" id="refLink">t.me/VariaGAME_bot</div>
-        <div class="ref-actions">
-          <button class="ref-btn" onclick="window.copyRef()"><i class="fas fa-copy"></i> Copy</button>
-          <button class="ref-btn share" onclick="window.shareRef()"><i class="fas fa-share"></i> Share</button>
+      <div style="background:white; border-radius:32px; padding:24px; text-align:center;">
+        <lottie-player src="https://lottie.host/5c6d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9e0f/CdEfGhIjKl.json" background="transparent" speed="1" style="width:80px;height:80px;margin:0 auto;" loop autoplay></lottie-player>
+        <h3>Invite Friends</h3>
+        <p>Earn <strong>$0.15</strong> per referral!</p>
+        <div style="background:#f8fafc; border:2px dashed #6c47ff; border-radius:20px; padding:16px; margin:20px 0;" id="refLink">t.me/VariaGAME_bot</div>
+        <div style="display:flex; gap:12px;">
+          <button id="copyRefBtn" style="flex:1; background:#6c47ff; color:white; border:none; padding:16px; border-radius:60px;"><i class="fas fa-copy"></i> Copy</button>
+          <button id="shareRefBtn" style="flex:1; background:#10b981; color:white; border:none; padding:16px; border-radius:60px;"><i class="fas fa-share"></i> Share</button>
         </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:20px;">
+        <div style="background:white; border-radius:20px; padding:16px; text-align:center;"><span id="refCount">0</span><br>Invites</div>
+        <div style="background:white; border-radius:20px; padding:16px; text-align:center;">$<span id="refEarned">0.00</span><br>Earned</div>
       </div>
     </div>
     
+    <!-- PROFILE -->
     <div class="page" id="profilePage">
-      <div style="background:white; border-radius:32px; padding:24px; margin-bottom:24px; box-shadow:0 8px 24px rgba(0,0,0,0.04);">
-        <h4 style="margin-bottom:16px; color:#1e293b;"><i class="fas fa-ticket-alt" style="color:#6c47ff; margin-right:8px;"></i>Promo Code</h4>
-        <div style="display:flex; gap:10px;">
-          <input id="promoInput" placeholder="Enter code" style="flex:1; padding:16px; border:2px solid #e2e8f0; border-radius:20px; outline:none;">
-          <button onclick="window.applyPromo()" style="background:#6c47ff; color:white; border:none; padding:0 24px; border-radius:20px; font-weight:700;">Apply</button>
+      <div style="background:white; border-radius:24px; padding:20px; margin-bottom:16px;">
+        <div style="display:flex; gap:16px; align-items:center;">
+          <div class="avatar" style="width:70px;height:70px;">V</div>
+          <div><h3 id="profileName">Player</h3><p>ID: <span id="profileId">12345</span></p></div>
         </div>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px;">
-        <div style="background:white; border-radius:24px; padding:20px; text-align:center;"><i class="fas fa-chart-line" style="color:#6c47ff; font-size:1.5rem;"></i><div style="font-weight:800; margin-top:8px;">$<span id="totalEarned">0.00</span></div></div>
-        <div style="background:white; border-radius:24px; padding:20px; text-align:center;"><i class="fas fa-gamepad" style="color:#6c47ff; font-size:1.5rem;"></i><div style="font-weight:800; margin-top:8px;"><span id="gamesPlayed">0</span></div></div>
-        <div style="background:white; border-radius:24px; padding:20px; text-align:center;"><i class="fas fa-clock" style="color:#6c47ff; font-size:1.5rem;"></i><div style="font-weight:800; margin-top:8px;"><span id="totalMinutes">0</span>m</div></div>
+      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:16px;">
+        <div style="background:white; border-radius:20px; padding:16px;">$<span id="totalEarned">0.00</span><br>Earned</div>
+        <div style="background:white; border-radius:20px; padding:16px;"><span id="gamesPlayed">0</span><br>Games</div>
+        <div style="background:white; border-radius:20px; padding:16px;"><span id="totalMinutes">0</span>m<br>Time</div>
+        <div style="background:white; border-radius:20px; padding:16px;"><span id="highestLevel">1</span><br>Max Level</div>
       </div>
-      <button onclick="window.openTonModal()" style="background:linear-gradient(135deg,#0088cc,#00aaff); color:white; border:none; border-radius:60px; padding:18px; width:100%; font-weight:700; font-size:1.1rem; box-shadow:0 8px 24px rgba(0,136,204,0.2);"><i class="fab fa-telegram"></i> Withdraw TON</button>
+      <div id="adminPanel" style="display:none;">
+        <button id="openAdminBtn" style="background:#1e293b; color:white; border:none; border-radius:60px; padding:16px; width:100%;">Admin Panel</button>
+      </div>
+      <button id="withdrawBtn" style="background:#0088cc; color:white; border:none; border-radius:60px; padding:18px; width:100%;">Withdraw TON</button>
     </div>
   </div>
   
   <div class="bottom-nav">
-    <div class="nav-item active" data-page="home" onclick="window.switchPage('home')"><i class="fas fa-home"></i><span>Home</span></div>
-    <div class="nav-item" data-page="games" onclick="window.switchPage('games')"><i class="fas fa-gamepad"></i><span>Games</span></div>
-    <div class="nav-item" data-page="referral" onclick="window.switchPage('referral')"><i class="fas fa-users"></i><span>Referral</span></div>
-    <div class="nav-item" data-page="profile" onclick="window.switchPage('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
+    <div class="nav-item active" data-page="home"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item" data-page="games"><i class="fas fa-gamepad"></i><span>Games</span></div>
+    <div class="nav-item" data-page="referral"><i class="fas fa-users"></i><span>Referral</span></div>
+    <div class="nav-item" data-page="profile"><i class="fas fa-user"></i><span>Profile</span></div>
   </div>
 </div>
 
-<div class="modal" id="adModal">
+<!-- Modals -->
+<div class="modal" id="currencyModal">
   <div class="modal-content">
-    <div class="modal-header"><h3><i class="fas fa-ad" style="color:#6c47ff;"></i> Watch Ad to Play</h3><div class="modal-close" onclick="window.closeModal('adModal')">&times;</div></div>
-    <p style="color:#64748b; text-align:center;">Complete the task to unlock the game</p>
-    <div class="task-indicator" id="taskIndicator">0/1</div>
-    <button class="ad-btn" onclick="window.completeAdTask()"><i class="fas fa-play"></i> Watch Advertisement</button>
-    <p style="color:#94a3b8; text-align:center; margin-top:16px; cursor:pointer;" onclick="window.closeModal('adModal')">Cancel</p>
+    <div class="modal-header"><h3>Select Currency</h3><div class="modal-close" onclick="document.getElementById('currencyModal').classList.remove('active')">&times;</div></div>
+    <div id="currencyList"></div>
   </div>
 </div>
 
 <div class="modal" id="tonModal">
   <div class="modal-content">
-    <div class="modal-header"><h3>Withdraw TON</h3><div class="modal-close" onclick="window.closeModal('tonModal')">&times;</div></div>
-    <p style="color:#1e293b; font-weight:600;">Available: $<span id="tonBalance">0.00</span></p>
-    <p style="color:#64748b; margin-bottom:16px;">1 TON ≈ $<span id="liveTon">2.45</span></p>
-    <input id="tonAddress" placeholder="UQ... wallet address" style="width:100%; padding:16px; border-radius:20px; border:2px solid #e2e8f0; margin-bottom:20px; outline:none;">
-    <button onclick="window.requestTon()" style="background:linear-gradient(135deg,#0088cc,#00aaff); color:white; padding:16px; width:100%; border:none; border-radius:60px; font-weight:700;">Request Withdrawal</button>
+    <div class="modal-header"><h3>Withdraw TON</h3><div class="modal-close" onclick="document.getElementById('tonModal').classList.remove('active')">&times;</div></div>
+    <p>Available: <span id="tonBalance">0.00</span></p>
+    <input id="tonAddress" placeholder="UQ... wallet" style="width:100%; padding:16px; border-radius:20px; border:2px solid #e2e8f0; margin:20px 0;">
+    <button id="requestTonBtn" style="background:#0088cc; color:white; padding:16px; width:100%; border:none; border-radius:60px;">Request</button>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <script>
-  var tg = window.Telegram.WebApp;
+  const tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
   
-  var db, userData, userId, timer, pendingGame;
-  var DAILY = 240, BASE_RATE = 0.001, REF_BONUS = 0.15;
-  var firebaseConfig = {apiKey:"AIzaSyATlWEp-GRv37SP2nPeeXLrYun8MG5KvLk",authDomain:"variagame-79b3d.firebaseapp.com",projectId:"variagame-79b3d",storageBucket:"variagame-79b3d.firebasestorage.app",messagingSenderId:"661347349467",appId:"1:661347349467:web:15237c4e8fecf15ac32dfe"};
-  
-  var gamesDB = [
-    {ad:"2048", kategori:"Puzzle", embed:"2048", icon:"fa-th"},
-    {ad:"Subway Surfers", kategori:"Action", embed:"subway", icon:"fa-train-subway"},
-    {ad:"Hill Climb", kategori:"Racing", embed:"hillclimb", icon:"fa-car"},
-    {ad:"8 Ball Pool", kategori:"Sports", embed:"8ball", icon:"fa-circle"}
+  let db, userData, userId, isInGame = false, pendingGameUrl = null;
+  const DAILY = 240, BASE_RATE = 0.001, REF_BONUS = 0.15;
+  const ADMIN_IDS = ['123456789', '987654321'];
+  let currentCurrency = { code: 'USD', symbol: '$', rate: 1 };
+  const currencies = [
+    { code: 'USD', symbol: '$', rate: 1, flag: '🇺🇸' },
+    { code: 'EUR', symbol: '€', rate: 0.92, flag: '🇪🇺' },
+    { code: 'TRY', symbol: '₺', rate: 32.5, flag: '🇹🇷' },
+    { code: 'TON', symbol: 'TON', rate: 0.4, flag: '💎' }
   ];
   
-  // Video
-  var video = document.getElementById('loadingVideo');
-  var videoContainer = document.getElementById('videoContainer');
-  var splashScreen = document.getElementById('splashScreen');
-  var languageSelector = document.getElementById('languageSelector');
+  // Firebase Config - GERÇEK
+  const firebaseConfig = {
+    apiKey: "AIzaSyATlWEp-GRv37SP2nPeeXLrYun8MG5KvLk",
+    authDomain: "variagame-79b3d.firebaseapp.com",
+    projectId: "variagame-79b3d",
+    storageBucket: "variagame-79b3d.firebasestorage.app",
+    messagingSenderId: "661347349467",
+    appId: "1:661347349467:web:15237c4e8fecf15ac32dfe"
+  };
   
-  video.addEventListener('loadeddata', function(){ console.log('Video ready'); });
-  video.addEventListener('ended', function(){ window.skipVideo(); });
-  video.addEventListener('error', function(){ console.log('Video error, skipping...'); window.skipVideo(); });
+  const gamesDB = [{ ad: "2048", kategori: "Puzzle", file: "2048.html", icon: "fa-th" }];
   
-  window.skipVideo = function(){
-    if(video) video.pause();
-    if(videoContainer) videoContainer.style.display = 'none';
-    if(splashScreen) splashScreen.style.display = 'flex';
-    setTimeout(function(){
-      if(splashScreen) splashScreen.style.display = 'none';
-      if(languageSelector) languageSelector.classList.remove('hidden');
+  // Oyun Loading
+  const gameLoadingVideo = document.getElementById('gameLoadingVideo');
+  const gameLoadingContainer = document.getElementById('gameLoadingContainer');
+  gameLoadingVideo.addEventListener('ended', () => {
+    if (pendingGameUrl) window.location.href = pendingGameUrl;
+    gameLoadingContainer.style.display = 'none';
+  });
+  gameLoadingVideo.addEventListener('error', () => {
+    if (pendingGameUrl) window.location.href = pendingGameUrl;
+    gameLoadingContainer.style.display = 'none';
+  });
+  
+  window.openGame = (file) => {
+    pendingGameUrl = file;
+    gameLoadingContainer.style.display = 'flex';
+    gameLoadingVideo.currentTime = 0;
+    gameLoadingVideo.play().catch(() => { if (pendingGameUrl) window.location.href = pendingGameUrl; });
+    isInGame = true;
+    document.getElementById('gameStatusText').textContent = 'Game active - Earning!';
+    document.getElementById('gameStatus').classList.remove('inactive');
+  };
+  
+  // Video Skip
+  document.getElementById('skipButton').addEventListener('click', () => {
+    document.getElementById('loadingVideo').pause();
+    document.getElementById('videoContainer').style.display = 'none';
+    document.getElementById('splashScreen').classList.remove('hidden');
+    setTimeout(() => {
+      document.getElementById('splashScreen').classList.add('hidden');
+      document.getElementById('languageSelector').classList.remove('hidden');
     }, 2000);
-  };
+  });
+  document.getElementById('loadingVideo').addEventListener('ended', () => document.getElementById('skipButton').click());
   
-  window.selectLanguage = function(l){
-    document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('active'); });
-    document.querySelector('.lang-btn[data-lang="'+l+'"]').classList.add('active');
-  };
-  
-  window.confirmLanguage = function(){
+  // Dil
+  document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', function() {
+    document.querySelectorAll('.lang-btn').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  }));
+  document.getElementById('confirmLangBtn').addEventListener('click', () => {
     document.getElementById('languageSelector').classList.add('hidden');
     document.getElementById('onboarding').classList.remove('hidden');
-  };
+  });
   
-  window.selectAge = function(a){
-    document.querySelectorAll('[data-step="1"] .opt-btn').forEach(function(b){ b.classList.remove('active'); });
-    event.currentTarget.classList.add('active');
-  };
-  
-  window.selectGenre = function(g){ event.currentTarget.classList.toggle('active'); };
-  
-  window.selectFrequency = function(f){
-    document.querySelectorAll('[data-step="3"] .opt-btn').forEach(function(b){ b.classList.remove('active'); });
-    event.currentTarget.classList.add('active');
-  };
-  
-  window.nextOnboardingStep = function(s){
-    document.querySelectorAll('.onboard-step').forEach(function(e){ e.classList.remove('active'); });
-    document.querySelector('.onboard-step[data-step="'+s+'"]').classList.add('active');
-  };
-  
-  window.completeOnboarding = function(){
+  // Onboarding
+  document.querySelectorAll('[data-age]').forEach(el => el.addEventListener('click', function() {
+    document.querySelectorAll('[data-age]').forEach(x => x.classList.remove('active')); this.classList.add('active');
+  }));
+  document.querySelectorAll('[data-genre]').forEach(el => el.addEventListener('click', function() { this.classList.toggle('active'); }));
+  document.querySelectorAll('[data-freq]').forEach(el => el.addEventListener('click', function() {
+    document.querySelectorAll('[data-freq]').forEach(x => x.classList.remove('active')); this.classList.add('active');
+  }));
+  document.getElementById('onboardNext1').addEventListener('click', () => { document.querySelectorAll('.onboard-step').forEach(e => e.classList.remove('active')); document.querySelector('[data-step="2"]').classList.add('active'); });
+  document.getElementById('onboardNext2').addEventListener('click', () => { document.querySelectorAll('.onboard-step').forEach(e => e.classList.remove('active')); document.querySelector('[data-step="3"]').classList.add('active'); });
+  document.getElementById('onboardNext3').addEventListener('click', () => {
     document.getElementById('onboarding').classList.add('hidden');
     initApp();
+  });
+  
+  // Ayarlar
+  document.getElementById('settingsBtn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.toggle('show'); });
+  document.addEventListener('click', () => document.getElementById('settingsMenu').classList.remove('show'));
+  
+  document.getElementById('currencySetting').addEventListener('click', () => {
+    let html = '';
+    currencies.forEach(c => html += `<div class="settings-item" onclick="selectCurrency('${c.code}','${c.symbol}',${c.rate})"><span>${c.flag}</span><span>${c.code} (${c.symbol})</span></div>`);
+    document.getElementById('currencyList').innerHTML = html;
+    document.getElementById('currencyModal').classList.add('active');
+  });
+  
+  window.selectCurrency = (code, symbol, rate) => {
+    currentCurrency = { code, symbol, rate: parseFloat(rate) };
+    document.getElementById('currencySymbol').textContent = symbol;
+    document.getElementById('settingsCurrency').textContent = code;
+    updateUI();
+    document.getElementById('currencyModal').classList.remove('active');
   };
   
-  window.switchPage = function(p){
-    document.querySelectorAll('.page').forEach(function(pg){ pg.classList.remove('active'); });
-    document.getElementById(p+'Page').classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
-    document.querySelector('.nav-item[data-page="'+p+'"]').classList.add('active');
+  // Navigasyon
+  window.switchPage = (page) => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(page+'Page').classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
   };
+  document.querySelectorAll('.nav-item').forEach(el => el.addEventListener('click', function() { switchPage(this.dataset.page); }));
   
-  window.openModal = function(id){ document.getElementById(id).classList.add('active'); };
-  window.closeModal = function(id){ document.getElementById(id).classList.remove('active'); };
-  
-  window.showToast = function(msg, err){
-    var t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.background = err ? '#ef4444' : '#1e293b';
-    t.classList.add('show');
-    setTimeout(function(){ t.classList.remove('show'); }, 3000);
-  };
-  
-  window.copyRef = function(){
-    navigator.clipboard.writeText('https://t.me/VariaGAME_bot?startapp='+userId);
-    window.showToast('✅ Link copied!');
-  };
-  
-  window.shareRef = function(){
-    tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent('https://t.me/VariaGAME_bot?startapp='+userId)+'&text=Play and earn TON!');
-  };
-  
-  window.openTonModal = function(){ 
-    document.getElementById('tonBalance').textContent = (userData?.balance||0).toFixed(3);
-    window.openModal('tonModal'); 
-  };
-  
-  window.requestTon = function(){
-    var addr = document.getElementById('tonAddress').value;
-    if(!addr.startsWith('UQ')) return window.showToast('Invalid TON address', true);
-    window.showToast('✅ Withdrawal requested!');
-    window.closeModal('tonModal');
-  };
-  
-  window.applyPromo = function(){ window.showToast('Invalid promo code', true); };
-  
-  window.showAdTask = function(gameId){
-    pendingGame = gameId;
-    var indicator = document.getElementById('taskIndicator');
-    indicator.className = 'task-indicator';
-    indicator.textContent = '0/1';
-    window.openModal('adModal');
-  };
-  
-  window.completeAdTask = function(){
-    var indicator = document.getElementById('taskIndicator');
-    indicator.className = 'task-indicator done';
-    indicator.textContent = '1/1';
-    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    setTimeout(function(){
-      window.closeModal('adModal');
-      if(pendingGame === '2048') window.location.href = '2048.html';
-    }, 500);
-  };
-  
-  window.filterCategory = function(cat){
-    document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
-    event.target.classList.add('active');
-    renderGames(cat);
-  };
-  
-  async function initApp(){
-    document.getElementById('dbLoading').style.display = 'flex';
-    try{
-      if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : 'demo_'+Date.now();
-      var ref = db.collection('users').doc(userId);
-      var snap = await ref.get();
-      if(!snap.exists){
-        userData = {balance:0, todayPlayed:0, lastReset:new Date().toISOString().split('T')[0], xp:0, level:1, totalEarned:0, totalMinutes:0, gamesPlayed:0, refCode:Math.random().toString(36).substring(2,10), referralCount:0, referralEarnings:0};
-        await ref.set(userData);
-      }else{
-        userData = snap.data();
-        checkReset();
-      }
-      ref.onSnapshot(function(s){ if(s.exists){ userData = s.data(); updateUI(); } });
-      startPayment(); updateUI(); renderGames('All');
-      document.getElementById('dbLoading').style.display = 'none';
-      document.getElementById('mainApp').classList.add('active');
-      setInterval(fetchTon, 8000); fetchTon();
-    }catch(e){
-      console.log('Firebase error, using localStorage');
-      useLocal();
-    }
+  // Render Games
+  function renderGames() {
+    const html = gamesDB.map(g => `<div class="game-card" onclick="openGame('${g.file}')"><div class="game-thumb"><i class="fas ${g.icon}"></i></div><h4>${g.ad}</h4><p>${g.kategori}</p></div>`).join('');
+    document.getElementById('featuredGames').innerHTML = html;
+    document.getElementById('allGamesGrid').innerHTML = html;
   }
   
-  function checkReset(){
-    var today = new Date().toISOString().split('T')[0];
-    if(userData.lastReset !== today){
-      userData.todayPlayed = 0;
-      userData.lastReset = today;
-      if(db) db.collection('users').doc(userId).update({todayPlayed:0, lastReset:today});
-    }
+  // Toast
+  function showToast(msg, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type||''}`;
+    toast.innerHTML = `<lottie-player src="https://lottie.host/9b1a2e5d-7c6b-4a9e-8f1a-2c3d4e5f6a7b/pQr8StUvWx.json" background="transparent" speed="1" style="width:24px;height:24px;" autoplay></lottie-player><span>${msg}</span>`;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
   }
   
-  function startPayment(){
-    var sec = 60;
-    timer = setInterval(function(){
-      sec--;
-      document.getElementById('paymentTimer').textContent = sec + 's';
-      if(sec <= 0){ sec = 60; processPayment(); }
-    }, 1000);
-  }
-  
-  function processPayment(){
-    checkReset();
-    if((userData.todayPlayed||0) >= DAILY) return updateLimitBadge();
-    var earned = BASE_RATE;
-    userData.balance += earned;
-    userData.totalEarned += earned;
+  // Ödeme
+  function processPayment() {
+    if (!isInGame) return;
+    if ((userData.todayPlayed||0) >= DAILY) return;
+    const earned = BASE_RATE;
+    userData.balance = (userData.balance||0) + earned;
+    userData.totalEarned = (userData.totalEarned||0) + earned;
     userData.todayPlayed = (userData.todayPlayed||0) + 1;
     userData.totalMinutes = (userData.totalMinutes||0) + 1;
     userData.xp = (userData.xp||0) + 5;
     checkLevel();
     updateUI();
-    if(db) db.collection('users').doc(userId).update({balance:userData.balance, totalEarned:userData.totalEarned, todayPlayed:userData.todayPlayed, totalMinutes:userData.totalMinutes, xp:userData.xp, level:userData.level});
-    updateLimitBadge();
-    window.showToast('💰 +$'+earned.toFixed(3)+' earned!');
+    if (db) db.collection('users').doc(userId).update({balance: userData.balance, totalEarned: userData.totalEarned, todayPlayed: userData.todayPlayed, totalMinutes: userData.totalMinutes, xp: userData.xp, level: userData.level});
+    showToast(`+ ${currentCurrency.symbol}${(earned * currentCurrency.rate).toFixed(4)}`, 'success');
   }
   
-  function checkLevel(){
-    var req = Math.floor(500 * Math.pow(1.1, (userData.level||1) - 1));
-    while(userData.xp >= req && userData.level < 10){
+  function checkLevel() {
+    const req = Math.floor(500 * Math.pow(1.1, (userData.level||1) - 1));
+    while (userData.xp >= req && userData.level < 10) {
       userData.level++;
       userData.xp -= req;
-      window.showToast('🎯 Level Up! Level '+userData.level+'!');
+      showToast(`🎯 Level Up! Level ${userData.level}`, 'success');
     }
   }
   
-  function updateUI(){
-    document.getElementById('balance').textContent = (userData.balance||0).toFixed(3);
-    document.getElementById('totalEarned').textContent = (userData.totalEarned||0).toFixed(2);
+  function updateUI() {
+    document.getElementById('balanceDisplay').textContent = ((userData.balance||0) * currentCurrency.rate).toFixed(currentCurrency.code==='TON'?4:2);
+    document.getElementById('totalEarned').textContent = ((userData.totalEarned||0) * currentCurrency.rate).toFixed(2);
     document.getElementById('gamesPlayed').textContent = userData.gamesPlayed||0;
     document.getElementById('totalMinutes').textContent = Math.floor(userData.totalMinutes||0);
     document.getElementById('level').textContent = userData.level||1;
     document.getElementById('playedToday').textContent = userData.todayPlayed||0;
     document.getElementById('xp').textContent = userData.xp||0;
-    var req = Math.floor(500 * Math.pow(1.1, (userData.level||1) - 1));
+    const req = Math.floor(500 * Math.pow(1.1, (userData.level||1) - 1));
     document.getElementById('xpNext').textContent = req;
     document.getElementById('xpFill').style.width = Math.min(((userData.xp||0)/req)*100, 100) + '%';
-    document.getElementById('earningRate').textContent = BASE_RATE.toFixed(4);
+    document.getElementById('earningRate').textContent = `${currentCurrency.symbol}${(BASE_RATE * currentCurrency.rate).toFixed(4)}`;
     document.getElementById('userName').textContent = tg.initDataUnsafe?.user?.first_name || 'Player';
-    document.getElementById('userUsername').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : '';
-    document.getElementById('refLink').textContent = 't.me/VariaGAME_bot?startapp='+userId;
-    if(tg.initDataUnsafe?.user?.photo_url){
-      document.getElementById('avatar').style.backgroundImage = 'url('+tg.initDataUnsafe.user.photo_url+')';
-      document.getElementById('avatar').textContent = '';
-    }else{
-      document.getElementById('avatar').textContent = (tg.initDataUnsafe?.user?.first_name || 'V').charAt(0);
+    document.getElementById('profileName').textContent = tg.initDataUnsafe?.user?.first_name || 'Player';
+    document.getElementById('refLink').textContent = `t.me/VariaGAME_bot?startapp=${userId}`;
+    document.getElementById('refCount').textContent = userData.referralCount||0;
+    document.getElementById('refEarned').textContent = ((userData.referralEarnings||0) * currentCurrency.rate).toFixed(2);
+  }
+  
+  // Init
+  async function initApp() {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : 'demo_' + Date.now();
+      
+      if (ADMIN_IDS.includes(userId)) document.getElementById('adminPanel').style.display = 'block';
+      
+      const ref = db.collection('users').doc(userId);
+      const snap = await ref.get();
+      if (!snap.exists) {
+        userData = {balance:0, todayPlayed:0, lastReset:new Date().toISOString().split('T')[0], xp:0, level:1, totalEarned:0, totalMinutes:0, gamesPlayed:0, refCode:Math.random().toString(36).substring(2,10), referralCount:0, referralEarnings:0};
+        await ref.set(userData);
+      } else {
+        userData = snap.data();
+      }
+      ref.onSnapshot(s => { if (s.exists) { userData = s.data(); updateUI(); } });
+      
+      setInterval(processPayment, 60000);
+      updateUI();
+      renderGames();
+      
+      document.getElementById('dbLoading').classList.add('hidden');
+      document.getElementById('mainApp').classList.add('active');
+    } catch(e) {
+      alert('Firebase bağlantı hatası! Lütfen sayfayı yenileyin.');
+      console.error(e);
     }
   }
   
-  function updateLimitBadge(){
-    var p = userData.todayPlayed||0;
-    var b = document.getElementById('limitBadge');
-    b.innerHTML = '<i class="fas fa-clock" style="margin-right:6px;"></i>'+p+'/240 min';
-    if(p >= DAILY){
-      b.classList.add('full');
-    }else{
-      b.classList.remove('full');
-    }
-  }
+  // Referans
+  document.getElementById('copyRefBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(`https://t.me/VariaGAME_bot?startapp=${userId}`);
+    showToast('Link copied!', 'success');
+  });
+  document.getElementById('shareRefBtn').addEventListener('click', () => {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(`https://t.me/VariaGAME_bot?startapp=${userId}`)}`);
+  });
   
-  function renderGames(filterCat){
-    var cats = ['All'];
-    gamesDB.forEach(function(g){ if(cats.indexOf(g.kategori) === -1) cats.push(g.kategori); });
-    document.getElementById('categoryTabs').innerHTML = cats.map(function(c){ return '<span class="cat-btn '+(c===filterCat?'active':'')+'" onclick="window.filterCategory(\''+c+'\')">'+c+'</span>'; }).join('');
-    var filtered = filterCat === 'All' ? gamesDB : gamesDB.filter(function(g){ return g.kategori === filterCat; });
-    var html = filtered.map(function(g){ return '<div class="game-card" onclick="window.showAdTask(\''+g.embed+'\')"><div class="game-thumb"><i class="fas '+g.icon+'"></i></div><h4>'+g.ad+'</h4><p>'+g.kategori+'</p></div>'; }).join('');
-    document.getElementById('allGamesGrid').innerHTML = html;
-    document.getElementById('featuredGames').innerHTML = gamesDB.slice(0,4).map(function(g){ return '<div class="game-card" onclick="window.showAdTask(\''+g.embed+'\')"><div class="game-thumb"><i class="fas '+g.icon+'"></i></div><h4>'+g.ad+'</h4></div>'; }).join('');
-  }
-  
-  function useLocal(){
-    var saved = localStorage.getItem('variaUser');
-    userData = saved ? JSON.parse(saved) : {balance:0, todayPlayed:0, lastReset:new Date().toISOString().split('T')[0], xp:0, level:1, totalEarned:0, totalMinutes:0, gamesPlayed:0, referralCount:0, referralEarnings:0};
-    checkReset(); startPayment(); updateUI(); renderGames('All');
-    document.getElementById('dbLoading').style.display = 'none';
-    document.getElementById('mainApp').classList.add('active');
-    setInterval(function(){ localStorage.setItem('variaUser', JSON.stringify(userData)); }, 2000);
-  }
-  
-  async function fetchTon(){
-    try{
-      var r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TONUSDT');
-      var d = await r.json();
-      document.getElementById('tonPrice').textContent = parseFloat(d.price).toFixed(2);
-      document.getElementById('liveTon').textContent = parseFloat(d.price).toFixed(2);
-    }catch(e){}
-  }
+  // Withdraw
+  document.getElementById('withdrawBtn').addEventListener('click', () => {
+    document.getElementById('tonBalance').textContent = ((userData.balance||0) * currentCurrency.rate).toFixed(2);
+    document.getElementById('tonModal').classList.add('active');
+  });
+  document.getElementById('requestTonBtn').addEventListener('click', () => {
+    const addr = document.getElementById('tonAddress').value;
+    if (!addr.startsWith('UQ')) return showToast('Invalid TON address', 'error');
+    showToast('Withdrawal requested!', 'success');
+    document.getElementById('tonModal').classList.remove('active');
+  });
 </script>
 </body>
 </html>
