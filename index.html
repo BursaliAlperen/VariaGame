@@ -33,7 +33,7 @@
     .h1{font-size:30px;font-weight:800;text-align:center}
     .muted{color:var(--muted)}
     .lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-    .lang-btn{border:none;padding:14px;border-radius:14px;cursor:pointer;background:#fff}
+    .lang-btn{border:none;padding:14px;border-radius:14px;cursor:pointer;background:#fff;position:relative;z-index:10004;pointer-events:auto}
     .step{display:none}
     .step.active{display:block}
     .cta{width:100%;border:none;border-radius:14px;padding:12px 14px;font-weight:700;background:var(--accent);color:#fff;cursor:pointer;margin-top:16px}
@@ -79,7 +79,7 @@
     <video id="loadingVideo" autoplay muted playsinline>
       <source src="public/loading.mp4" type="video/mp4" />
     </video>
-    <button id="skipIntro" class="skip">Skip</button>
+    <button id="skipIntro" class="skip" type="button" onclick="openLanguageDirect()">Skip</button>
   </div>
 
   <div id="gameLoading" class="video-screen hidden">
@@ -92,7 +92,7 @@
     <div class="panel glass">
       <div class="h1">VARIA ✦</div>
       <p class="muted" style="text-align:center" data-i18n="splashTag">Play-to-earn game hub</p>
-      <button class="cta" id="splashContinue" data-i18n="continue">Continue</button>
+      <button class="cta" id="splashContinue" type="button" data-i18n="continue" onclick="openLanguageDirect()">Continue</button>
     </div>
   </section>
 
@@ -100,7 +100,7 @@
     <div class="panel glass">
       <div class="h1" data-i18n="chooseLanguage">Choose Language</div>
       <div class="lang-grid" id="langGrid"></div>
-      <button class="cta" id="langContinue" data-i18n="continue">Continue</button>
+      <button class="cta" id="langContinue" type="button" data-i18n="continue" onclick="openOnboardDirect()">Continue</button>
     </div>
   </section>
 
@@ -492,8 +492,7 @@
     }
 
     function showSplash(){
-      document.getElementById('introVideo').classList.add('hidden');
-      document.getElementById('splash').classList.remove('hidden');
+      openLanguageDirect();
     }
 
     function launch2048(){
@@ -530,6 +529,22 @@
         if (j.success) notify('User updated'); else notify('Update failed');
       } catch(e){ notify('Update failed'); }
     }
+
+    function openLanguageDirect(){
+      document.getElementById('introVideo').classList.add('hidden');
+      document.getElementById('splash').classList.add('hidden');
+      document.getElementById('language').classList.remove('hidden');
+    }
+
+    function openOnboardDirect(){
+      document.getElementById('language').classList.add('hidden');
+      document.getElementById('onboard').classList.remove('hidden');
+      const first = document.getElementById('ob1');
+      if (first) first.classList.add('active');
+    }
+
+    window.openLanguageDirect = openLanguageDirect;
+    window.openOnboardDirect = openOnboardDirect;
 
     async function boot(){
       renderLang();
