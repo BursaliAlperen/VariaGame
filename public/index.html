@@ -3,503 +3,586 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>VARIA GAME ✦ Play & Earn TON</title>
+  <title>VARIA ✦ Play & Earn</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
   <style>
-    :root {
-      --bg: #f4f7fe;
-      --card: rgba(255,255,255,0.85);
-      --text: #2b3674;
-      --muted: #a3aed1;
-      --primary: #4318FF;
-      --primary-light: #e9e3ff;
-      --success: #05cd99;
-      --danger: #ff3b30;
-      --warning: #ffb347;
-      --shadow: 0 18px 40px rgba(112,144,176,0.12);
-    }
     * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color:transparent; }
-    body { background: var(--bg); background-image: radial-gradient(circle at 0% 0%, #fff, transparent 50%), radial-gradient(circle at 100% 100%, var(--primary-light), transparent 50%); color: var(--text); min-height:100vh; padding-bottom:90px; }
+    body { background: linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); min-height:100vh; padding-bottom:85px; }
     .app { max-width:428px; margin:0 auto; padding:20px 16px; }
-    @keyframes pop { 0%{opacity:0;transform:scale(0.9);} 100%{opacity:1;transform:scale(1);} }
-    @keyframes slide { 0%{opacity:0;transform:translateY(20px);} 100%{opacity:1;transform:translateY(0);} }
+    
+    @keyframes fadeIn { 0%{opacity:0;transform:translateY(10px);} 100%{opacity:1;transform:translateY(0);} }
     @keyframes spin { 100%{transform:rotate(360deg);} }
-    @keyframes fadeInOut { 0%{opacity:0.3;transform:scale(0.95);} 50%{opacity:1;transform:scale(1.05);} 100%{opacity:0.3;transform:scale(0.95);} }
-    @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,179,71,0.4);} 70%{box-shadow:0 0 0 15px rgba(255,179,71,0);} 100%{box-shadow:0 0 0 0 rgba(255,179,71,0);} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
     
-    /* Video Container */
-    .video-container { position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:10000; display:flex; align-items:center; justify-content:center; }
-    .video-container video { width:100%; height:100%; object-fit:cover; }
-    .skip-btn { position:absolute; bottom:30px; right:30px; background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); color:white; padding:14px 28px; border-radius:40px; cursor:pointer; z-index:10001; font-weight:600; border:none; font-size:16px; }
-    .skip-btn i { margin-left:8px; }
+    /* Video */
+    .video-full { position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:9999; }
+    .video-full video { width:100%; height:100%; object-fit:cover; }
+    .skip-btn { position:absolute; bottom:30px; right:20px; background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); color:white; padding:14px 28px; border-radius:60px; font-weight:600; z-index:10000; cursor:pointer; border:1px solid rgba(255,255,255,0.2); transition:0.2s; }
+    .skip-btn:hover { background:#6c47ff; }
     
-    /* Splash Screen */
-    .splash-screen { position:fixed; top:0; left:0; right:0; bottom:0; background:#0f0f1a; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s; }
-    .splash-screen.fade-out { opacity:0; pointer-events:none; }
-    .splash-icon { font-size:80px; color:#7aaae0; margin-bottom:20px; animation:fadeInOut 2s infinite alternate; }
-    .splash-text { font-size:28px; font-weight:400; letter-spacing:3px; color:#c0d4f0; border-top:1px solid #2e3a55; padding-top:20px; width:280px; text-align:center; }
-    .splash-text small { display:block; font-size:16px; color:#8fa4cc; margin-top:8px; letter-spacing:6px; }
+    /* Splash */
+    .splash { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .splash-icon { font-size:80px; color:#6c47ff; margin-bottom:24px; animation:pulse 2s infinite; }
+    .splash-title { font-size:36px; font-weight:900; background:linear-gradient(135deg,#6c47ff,#8b6cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
+    .splash-sub { color:#7c8db0; margin-top:8px; letter-spacing:6px; font-weight:500; }
     
-    /* Dil Seçimi & Onboarding */
-    .language-selector, .onboarding { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(244,247,254,0.95); backdrop-filter:blur(20px); z-index:9998; display:flex; flex-direction:column; justify-content:center; padding:24px; }
-    .language-selector.hidden, .onboarding.hidden { display:none; }
-    .language-title, .onboarding-title { font-size:2.2rem; font-weight:800; margin-bottom:12px; text-align:center; color:var(--primary); }
-    .language-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:32px 0; }
-    .lang-btn { background:#fff; border:2px solid transparent; border-radius:24px; padding:20px; text-align:center; cursor:pointer; box-shadow:var(--shadow); }
-    .lang-btn i { font-size:2.5rem; margin-bottom:8px; }
-    .lang-btn span { display:block; font-weight:700; margin-top:8px; }
-    .lang-btn.active { border-color:var(--primary); background:var(--primary-light); }
-    .lang-btn.en i { color:#012169; } .lang-btn.tr i { color:#E30A17; } .lang-btn.ru i { color:#0039A6; } .lang-btn.es i { color:#F1BF00; }
-    .onboarding-step { display:none; } .onboarding-step.active { display:block; animation:slide 0.4s; }
-    .options-grid { display:grid; gap:14px; margin-bottom:32px; }
-    .options-3 { grid-template-columns:repeat(3,1fr); } .options-2 { grid-template-columns:repeat(2,1fr); }
-    .select-btn { background:#fff; border:2px solid transparent; border-radius:24px; padding:20px 10px; text-align:center; cursor:pointer; box-shadow:var(--shadow); }
-    .select-btn i { font-size:2rem; color:var(--primary); margin-bottom:12px; }
-    .select-btn span { font-weight:700; }
-    .select-btn.active { border-color:var(--primary); background:var(--primary-light); }
-    .onboarding-btn { background:linear-gradient(135deg, var(--primary), #868CFF); color:white; border:none; border-radius:20px; padding:18px; font-weight:700; font-size:1.2rem; width:100%; cursor:pointer; }
+    /* Dil */
+    .lang-select { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9997; display:flex; flex-direction:column; justify-content:center; padding:24px; }
+    .lang-select.hidden { display:none; }
+    .lang-title { font-size:2.2rem; font-weight:800; color:#1e293b; margin-bottom:32px; text-align:center; }
+    .lang-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .lang-btn { background:white; border:2px solid transparent; border-radius:28px; padding:24px; text-align:center; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.04); transition:0.2s; }
+    .lang-btn i { font-size:2.8rem; margin-bottom:8px; }
+    .lang-btn span { display:block; color:#1e293b; font-weight:700; }
+    .lang-btn.active { border-color:#6c47ff; background:#f5f3ff; }
     
-    /* Ana Uygulama */
-    .db-loading { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:9997; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .spinner { width:50px; height:50px; border:5px solid var(--primary-light); border-top-color:var(--primary); border-radius:50%; animation:spin 1s infinite; }
-    .main-app { display:none; } .main-app.active { display:block; animation:pop 0.5s; }
-    .header { display:flex; justify-content:space-between; margin-bottom:24px; }
-    .logo { font-size:2rem; font-weight:900; background:linear-gradient(135deg, var(--primary), #868CFF); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .live-ticker { display:flex; align-items:center; gap:8px; background:#fff; padding:8px 16px; border-radius:20px; box-shadow:var(--shadow); font-weight:700; }
-    .live-dot { width:8px; height:8px; background:var(--success); border-radius:4px; animation:blink 1.5s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-    .user-card { background:var(--card); backdrop-filter:blur(15px); border-radius:28px; padding:16px; box-shadow:var(--shadow); display:flex; align-items:center; gap:16px; margin-bottom:24px; border:1px solid rgba(255,255,255,0.6); }
-    .avatar { width:56px; height:56px; border-radius:28px; background:linear-gradient(135deg, var(--primary), #868CFF); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; color:white; background-size:cover; border:3px solid #fff; }
-    .balance { background:#fff; padding:12px 20px; border-radius:40px; margin-left:auto; font-weight:800; color:var(--success); }
+    /* Onboarding */
+    .onboard { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9997; display:flex; flex-direction:column; justify-content:center; padding:24px; }
+    .onboard.hidden { display:none; }
+    .onboard-step { display:none; } .onboard-step.active { display:block; animation:fadeIn 0.4s; }
+    .onboard-title { font-size:2.2rem; font-weight:800; color:#1e293b; margin-bottom:12px; text-align:center; }
+    .onboard-desc { color:#64748b; margin-bottom:32px; text-align:center; }
+    .options { display:grid; gap:14px; margin-bottom:36px; }
+    .opt-3 { grid-template-columns:repeat(3,1fr); } .opt-2 { grid-template-columns:repeat(2,1fr); }
+    .opt-btn { background:white; border:2px solid transparent; border-radius:24px; padding:20px 8px; text-align:center; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.02); transition:0.2s; }
+    .opt-btn i { font-size:2.2rem; color:#6c47ff; margin-bottom:8px; }
+    .opt-btn span { color:#1e293b; font-weight:600; }
+    .opt-btn.active { border-color:#6c47ff; background:#f5f3ff; }
+    .next-btn { background:#6c47ff; color:white; border:none; border-radius:60px; padding:18px; font-weight:700; font-size:1.2rem; width:100%; cursor:pointer; box-shadow:0 8px 24px rgba(108,71,255,0.2); transition:0.2s; }
+    .next-btn:active { transform:scale(0.98); }
     
-    /* BANNER ALANLARI */
-    .banner-area { margin-bottom:16px; }
-    .click-banner { background:linear-gradient(145deg, #fff5e6, #ffffff); border-radius:20px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; box-shadow:var(--shadow); border:2px solid var(--warning); animation:pulse 2s infinite; }
-    .display-banner { background:#eef2ff; border-radius:20px; padding:14px 16px; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow); border:1px dashed var(--primary); margin-bottom:8px; }
-    .banner-icon { font-size:28px; color:var(--primary); }
-    .banner-content { flex:1; }
-    .banner-title { font-weight:800; font-size:15px; }
-    .banner-desc { font-size:12px; color:var(--muted); }
-    .banner-badge { background:var(--primary); color:white; padding:4px 12px; border-radius:30px; font-size:12px; font-weight:700; }
-    .banner-badge.gold { background:var(--warning); color:#2b3674; }
+    /* Loading */
+    .loading { position:fixed; top:0; left:0; right:0; bottom:0; background:linear-gradient(145deg, #f8faff 0%, #f0f4fe 100%); z-index:9996; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .spinner { width:56px; height:56px; border:4px solid #e2e8f0; border-top-color:#6c47ff; border-radius:50%; animation:spin 0.8s infinite; }
     
-    .xp-card { margin-bottom:28px; }
-    .level-row { display:flex; justify-content:space-between; margin-bottom:8px; }
-    .level-badge { background:var(--primary-light); color:var(--primary); padding:6px 16px; border-radius:30px; font-weight:800; }
-    .xp-bar { height:10px; background:#e0e5f2; border-radius:5px; }
-    .xp-fill { height:100%; background:linear-gradient(90deg, var(--primary), #868CFF); width:0%; border-radius:5px; }
-    .daily-card { background:var(--card); backdrop-filter:blur(15px); border-radius:28px; padding:24px; box-shadow:var(--shadow); margin-bottom:24px; }
-    .streak { display:flex; justify-content:space-between; margin:20px 0; }
-    .day { width:44px; height:44px; border-radius:22px; background:#f4f7fe; display:flex; align-items:center; justify-content:center; font-weight:700; }
-    .day.done { background:var(--success); color:white; }
-    .day.current { border:2px solid var(--primary); color:var(--primary); background:var(--primary-light); }
-    .claim-btn { background:linear-gradient(135deg, var(--primary), #868CFF); color:white; border:none; border-radius:20px; padding:18px; width:100%; font-weight:800; font-size:1.1rem; cursor:pointer; box-shadow:0 8px 0 #2b1fd1; transition:0.1s; }
-    .claim-btn:active { transform:translateY(4px); box-shadow:0 4px 0 #1f15b3; }
-    .claim-btn:disabled { opacity:0.5; transform:none; }
-    .section-header { display:flex; justify-content:space-between; margin:16px 0; }
+    /* Ana */
+    .main-app { display:none; } .main-app.active { display:block; animation:fadeIn 0.5s; }
+    
+    /* Header */
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+    .logo { font-size:2.2rem; font-weight:900; background:linear-gradient(135deg,#6c47ff,#8b6cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px; }
+    .ton-ticker { display:flex; align-items:center; gap:8px; background:white; padding:10px 18px; border-radius:60px; box-shadow:0 4px 12px rgba(0,0,0,0.02); }
+    .ton-ticker i { color:#6c47ff; }
+    .ton-ticker span { color:#1e293b; font-weight:700; }
+    
+    /* Kullanıcı Kartı */
+    .user-card { background:white; border-radius:32px; padding:18px; display:flex; align-items:center; gap:16px; margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.04); }
+    .avatar { width:56px; height:56px; border-radius:28px; background:linear-gradient(135deg,#6c47ff,#8b6cff); display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:white; font-weight:700; }
+    .user-info h3 { color:#1e293b; font-size:1.2rem; } .user-info p { color:#64748b; font-size:0.85rem; }
+    .balance { background:#e6f7ec; padding:12px 18px; border-radius:60px; margin-left:auto; }
+    .balance span { color:#10b981; font-weight:800; font-size:1.1rem; }
+    
+    /* Banner */
+    .ad-banner-container { margin-bottom:20px; display:flex; justify-content:center; background:white; border-radius:24px; padding:8px; box-shadow:0 4px 12px rgba(0,0,0,0.02); }
+    
+    /* Level Kartı */
+    .stats-card { background:white; border-radius:32px; padding:24px; margin-bottom:24px; box-shadow:0 8px 24px rgba(0,0,0,0.04); }
+    .level-row { display:flex; justify-content:space-between; margin-bottom:16px; }
+    .level-badge { background:#6c47ff; color:white; padding:8px 20px; border-radius:60px; font-weight:700; }
+    .limit-badge { background:#e6f7ec; color:#10b981; padding:8px 20px; border-radius:60px; font-weight:700; }
+    .limit-badge.full { background:#fee2e2; color:#ef4444; }
+    .progress-bar { height:8px; background:#eef2f6; border-radius:4px; margin:16px 0; }
+    .progress-fill { height:100%; background:linear-gradient(90deg,#6c47ff,#8b6cff); border-radius:4px; width:0%; transition:width 0.3s; }
+    .earning-row { display:flex; justify-content:space-between; color:#64748b; font-weight:500; }
+    .auto-pay { display:flex; align-items:center; justify-content:center; gap:10px; background:#f5f3ff; border-radius:60px; padding:14px; margin-top:16px; color:#6c47ff; font-weight:600; }
+    
+    /* Kategoriler */
+    .category-tabs { display:flex; gap:10px; overflow-x:auto; padding:8px 0 20px; scrollbar-width:none; }
+    .category-tabs::-webkit-scrollbar { display:none; }
+    .cat-btn { background:white; border:1px solid #e2e8f0; padding:12px 22px; border-radius:60px; font-weight:600; color:#64748b; white-space:nowrap; cursor:pointer; transition:0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.02); }
+    .cat-btn.active { background:#6c47ff; border-color:#6c47ff; color:white; }
+    
+    /* Oyunlar */
+    .section-header { display:flex; justify-content:space-between; align-items:center; margin:24px 0 16px; }
+    .section-header h3 { color:#1e293b; font-size:1.3rem; }
+    .see-all { color:#6c47ff; font-weight:600; cursor:pointer; }
     .game-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-    .game-card { background:#fff; border-radius:24px; padding:12px; cursor:pointer; box-shadow:var(--shadow); text-align:center; }
-    .game-thumb { aspect-ratio:1; border-radius:16px; overflow:hidden; background:#f4f7fe; margin-bottom:8px; }
-    .game-thumb img { width:100%; height:100%; object-fit:cover; }
-    .page { display:none; } .page.active { display:block; animation:slide 0.3s; }
-    .bottom-nav { position:fixed; bottom:0; left:0; right:0; max-width:428px; margin:0 auto; background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); padding:14px 24px; display:flex; justify-content:space-around; border-radius:40px 40px 0 0; box-shadow:0 -10px 30px rgba(0,0,0,0.05); z-index:100; }
-    .nav-item { color:var(--muted); cursor:pointer; text-align:center; }
+    .game-card { background:white; border-radius:28px; padding:16px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.02); transition:0.2s; border:1px solid rgba(255,255,255,0.5); }
+    .game-card:active { transform:scale(0.98); }
+    .game-thumb { aspect-ratio:1; border-radius:20px; background:linear-gradient(145deg, #f5f3ff, #ede9fe); margin-bottom:14px; display:flex; align-items:center; justify-content:center; }
+    .game-thumb i { font-size:2.8rem; color:#6c47ff; }
+    .game-card h4 { color:#1e293b; font-size:1.1rem; margin-bottom:4px; }
+    .game-card p { color:#64748b; font-size:0.8rem; }
+    
+    /* Sayfalar */
+    .page { display:none; } .page.active { display:block; animation:fadeIn 0.3s; }
+    
+    /* Bottom Nav */
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; max-width:428px; margin:0 auto; background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); padding:16px 24px; display:flex; justify-content:space-around; border-top:1px solid rgba(0,0,0,0.04); border-radius:40px 40px 0 0; }
+    .nav-item { display:flex; flex-direction:column; align-items:center; color:#94a3b8; cursor:pointer; font-size:0.75rem; gap:4px; transition:0.2s; }
     .nav-item i { font-size:1.5rem; }
-    .nav-item.active { color:var(--primary); }
+    .nav-item.active { color:#6c47ff; }
     
     /* Modal */
-    .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(43,54,116,0.4); backdrop-filter:blur(8px); z-index:1000; align-items:flex-end; }
+    .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(8px); z-index:1000; align-items:flex-end; }
     .modal.active { display:flex; }
-    .modal-content { background:#fff; border-radius:32px 32px 0 0; width:100%; max-width:428px; padding:32px 24px; animation:slide 0.3s; max-height:90vh; overflow-y:auto; }
-    .modal-header { display:flex; justify-content:space-between; margin-bottom:24px; }
-    .close-btn { cursor:pointer; font-size:1.5rem; }
-    .task-indicator { width:70px; height:70px; border-radius:35px; background:#e0e5f2; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800; margin:20px auto; }
-    .task-indicator.done { background:var(--success); color:white; }
-    .ad-btn { background:var(--primary); color:white; padding:18px; border:none; border-radius:60px; width:100%; font-weight:800; font-size:1.1rem; cursor:pointer; }
-    .toast { position:fixed; bottom:100px; left:20px; right:20px; max-width:388px; margin:0 auto; background:var(--text); color:white; padding:16px; border-radius:20px; display:none; z-index:200; text-align:center; font-weight:600; }
-    .toast.show { display:block; animation:slide 0.3s; }
+    .modal-content { background:white; border-radius:36px 36px 0 0; width:100%; max-width:428px; padding:32px 24px; animation:fadeIn 0.3s; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+    .modal-close { cursor:pointer; font-size:1.5rem; color:#94a3b8; }
+    .task-indicator { width:90px; height:90px; border-radius:45px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:800; margin:24px auto; color:#1e293b; }
+    .task-indicator.done { background:#10b981; color:white; }
+    .ad-btn { background:#6c47ff; color:white; padding:18px; border:none; border-radius:60px; width:100%; font-weight:700; font-size:1.1rem; cursor:pointer; }
     
-    /* Ref Kartı */
-    .ref-card { background:var(--card); backdrop-filter:blur(15px); border-radius:28px; padding:24px; box-shadow:var(--shadow); margin-bottom:24px; text-align:center; }
-    .ref-link-box { background:#f4f7fe; border-radius:16px; padding:14px; margin:20px 0; font-weight:700; word-break:break-all; font-size:0.9rem; border:1px dashed var(--primary); }
-    .ref-actions { display:flex; gap:10px; }
-    .ref-btn { flex:1; background:var(--primary); color:white; border:none; padding:16px; border-radius:16px; font-weight:800; cursor:pointer; }
-    .ref-btn.share { background:var(--success); }
+    /* Referans */
+    .ref-card { background:white; border-radius:32px; padding:32px 24px; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.04); }
+    .ref-icon { font-size:3rem; color:#6c47ff; margin-bottom:16px; }
+    .ref-title { font-size:1.5rem; font-weight:800; color:#1e293b; margin-bottom:8px; }
+    .ref-desc { color:#64748b; margin-bottom:24px; }
+    .ref-link-box { background:#f8fafc; border:2px dashed #6c47ff; border-radius:20px; padding:16px; margin-bottom:20px; color:#1e293b; font-weight:600; word-break:break-all; }
+    .ref-actions { display:flex; gap:12px; }
+    .ref-btn { flex:1; background:#6c47ff; color:white; border:none; padding:16px; border-radius:60px; font-weight:700; cursor:pointer; }
+    .ref-btn.share { background:#10b981; }
+    
+    /* Toast */
+    .toast { position:fixed; bottom:100px; left:20px; right:20px; max-width:388px; margin:0 auto; background:#1e293b; color:white; padding:16px 24px; border-radius:60px; display:none; z-index:200; text-align:center; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.2); }
+    .toast.show { display:block; animation:fadeIn 0.3s; }
   </style>
 </head>
 <body>
 
-<!-- VİDEO AÇILIŞ -->
-<div class="video-container" id="videoContainer">
+<!-- CLASSIC PUSH -->
+<script type="text/javascript" src="//my-pu.sh/66d4bd96d86c3a4a0f2c/bf6f53703b/?placementName=default"></script>
+
+<!-- POPUP -->
+<script type="text/javascript" src="//data527.click/b22c46084b4c72cc2e0a/366ede0d91/?placementName=default"></script>
+
+<!-- REDIRECT -->
+<script type="text/javascript" src="//data527.click/987d0dd13b773be13cad/65cb1724bc/?placementName=default"></script>
+
+<div class="video-full" id="videoContainer">
   <video id="loadingVideo" autoplay muted playsinline preload="auto">
     <source src="loading.mp4" type="video/mp4">
   </video>
-  <button class="skip-btn" onclick="skipVideo()">Skip <i class="fas fa-forward"></i></button>
+  <div class="skip-btn" onclick="window.skipVideo()">Skip <i class="fas fa-forward"></i></div>
 </div>
 
-<!-- SPLASH SCREEN -->
-<div class="splash-screen" id="splashScreen">
+<div class="splash" id="splashScreen" style="display:none;">
   <div class="splash-icon"><i class="fas fa-crown"></i></div>
-  <div class="splash-text">POWERED BY<br>VARIA GAMES<small>✦ casual division ✦</small></div>
+  <div class="splash-title">VARIA GAMES</div>
+  <div class="splash-sub">✦ play & earn ✦</div>
 </div>
 
-<!-- DİL SEÇİMİ -->
-<div class="language-selector hidden" id="languageSelector">
-  <div class="language-title"><i class="fas fa-globe"></i> Select Language</div>
-  <div class="language-grid">
-    <div class="lang-btn en active" data-lang="en" onclick="selectLanguage('en')"><i class="fas fa-flag-usa"></i><span>English</span></div>
-    <div class="lang-btn tr" data-lang="tr" onclick="selectLanguage('tr')"><i class="fas fa-flag"></i><span>Türkçe</span></div>
-    <div class="lang-btn ru" data-lang="ru" onclick="selectLanguage('ru')"><i class="fas fa-flag"></i><span>Русский</span></div>
-    <div class="lang-btn es" data-lang="es" onclick="selectLanguage('es')"><i class="fas fa-flag"></i><span>Español</span></div>
+<div class="lang-select hidden" id="languageSelector">
+  <div class="lang-title"><i class="fas fa-globe"></i> Select Language</div>
+  <div class="lang-grid">
+    <div class="lang-btn active" data-lang="en" onclick="window.selectLanguage('en')"><i class="fas fa-flag-usa"></i><span>English</span></div>
+    <div class="lang-btn" data-lang="tr" onclick="window.selectLanguage('tr')"><i class="fas fa-flag"></i><span>Türkçe</span></div>
+    <div class="lang-btn" data-lang="ru" onclick="window.selectLanguage('ru')"><i class="fas fa-flag"></i><span>Русский</span></div>
+    <div class="lang-btn" data-lang="es" onclick="window.selectLanguage('es')"><i class="fas fa-flag"></i><span>Español</span></div>
   </div>
-  <button class="onboarding-btn" onclick="confirmLanguage()">Continue <i class="fas fa-arrow-right"></i></button>
+  <button class="next-btn" onclick="window.confirmLanguage()" style="margin-top:32px;">Continue <i class="fas fa-arrow-right"></i></button>
 </div>
 
-<!-- ONBOARDING -->
-<div class="onboarding hidden" id="onboarding">
-  <div class="onboarding-step active" data-step="1">
-    <div class="onboarding-title"><i class="fas fa-cake-candles"></i> How old are you?</div>
-    <div class="options-grid options-3">
-      <div class="select-btn" onclick="selectAge('under18')"><i class="fas fa-child"></i><span>18-</span></div>
-      <div class="select-btn" onclick="selectAge('18-24')"><i class="fas fa-user"></i><span>18-24</span></div>
-      <div class="select-btn" onclick="selectAge('25plus')"><i class="fas fa-user-tie"></i><span>25+</span></div>
+<div class="onboard hidden" id="onboarding">
+  <div class="onboard-step active" data-step="1">
+    <div class="onboard-title">How old are you?</div>
+    <div class="onboard-desc">We'll recommend games you'll love</div>
+    <div class="options opt-3">
+      <div class="opt-btn" onclick="window.selectAge('under18')"><i class="fas fa-child"></i><span>Under 18</span></div>
+      <div class="opt-btn" onclick="window.selectAge('18-24')"><i class="fas fa-user"></i><span>18-24</span></div>
+      <div class="opt-btn" onclick="window.selectAge('25plus')"><i class="fas fa-user-tie"></i><span>25+</span></div>
     </div>
-    <button class="onboarding-btn" onclick="nextOnboardingStep(2)">Continue</button>
+    <button class="next-btn" onclick="window.nextOnboardingStep(2)">Continue</button>
   </div>
-  <div class="onboarding-step" data-step="2">
-    <div class="onboarding-title"><i class="fas fa-gamepad"></i> What games do you like?</div>
-    <div class="options-grid options-2">
-      <div class="select-btn" onclick="selectGenre('action')"><i class="fas fa-fist-raised"></i><span>Action</span></div>
-      <div class="select-btn" onclick="selectGenre('racing')"><i class="fas fa-flag-checkered"></i><span>Racing</span></div>
-      <div class="select-btn" onclick="selectGenre('puzzle')"><i class="fas fa-puzzle-piece"></i><span>Puzzle</span></div>
-      <div class="select-btn" onclick="selectGenre('sports')"><i class="fas fa-futbol"></i><span>Sports</span></div>
+  <div class="onboard-step" data-step="2">
+    <div class="onboard-title">Favorite genres?</div>
+    <div class="options opt-2">
+      <div class="opt-btn" onclick="window.selectGenre('action')"><i class="fas fa-fist-raised"></i><span>Action</span></div>
+      <div class="opt-btn" onclick="window.selectGenre('puzzle')"><i class="fas fa-puzzle-piece"></i><span>Puzzle</span></div>
+      <div class="opt-btn" onclick="window.selectGenre('racing')"><i class="fas fa-flag-checkered"></i><span>Racing</span></div>
+      <div class="opt-btn" onclick="window.selectGenre('sports')"><i class="fas fa-futbol"></i><span>Sports</span></div>
     </div>
-    <button class="onboarding-btn" onclick="nextOnboardingStep(3)">Continue</button>
+    <button class="next-btn" onclick="window.nextOnboardingStep(3)">Continue</button>
   </div>
-  <div class="onboarding-step" data-step="3">
-    <div class="onboarding-title"><i class="fas fa-clock"></i> How often do you play?</div>
-    <div class="options-grid options-3">
-      <div class="select-btn" onclick="selectFrequency('daily')"><i class="fas fa-calendar-check"></i><span>Daily</span></div>
-      <div class="select-btn" onclick="selectFrequency('weekly')"><i class="fas fa-calendar-week"></i><span>Weekly</span></div>
-      <div class="select-btn" onclick="selectFrequency('casual')"><i class="fas fa-calendar"></i><span>Casual</span></div>
+  <div class="onboard-step" data-step="3">
+    <div class="onboard-title">Play frequency?</div>
+    <div class="options opt-3">
+      <div class="opt-btn" onclick="window.selectFrequency('daily')"><i class="fas fa-calendar-check"></i><span>Daily</span></div>
+      <div class="opt-btn" onclick="window.selectFrequency('weekly')"><i class="fas fa-calendar-week"></i><span>Weekly</span></div>
+      <div class="opt-btn" onclick="window.selectFrequency('casual')"><i class="fas fa-calendar"></i><span>Casual</span></div>
     </div>
-    <button class="onboarding-btn" onclick="completeOnboarding()">Start</button>
+    <button class="next-btn" onclick="window.completeOnboarding()">Start Playing</button>
   </div>
 </div>
 
-<!-- YÜKLENİYOR -->
-<div class="db-loading" id="dbLoading"><div class="spinner"></div><h3>Connecting...</h3></div>
+<div class="loading" id="dbLoading"><div class="spinner"></div><p style="margin-top:20px; color:#64748b; font-weight:500;">Connecting to server...</p></div>
 
-<!-- ANA UYGULAMA -->
 <div class="main-app" id="mainApp">
   <div class="app">
     <div class="header">
       <div class="logo">VARIA</div>
-      <div class="live-ticker"><span class="live-dot"></span>TON: $<span id="tonPrice">...</span></div>
+      <div class="ton-ticker"><i class="fas fa-circle" style="color:#10b981; font-size:10px;"></i> TON $<span id="tonPrice">2.45</span></div>
     </div>
+    
     <div class="user-card">
       <div class="avatar" id="avatar">V</div>
-      <div><h3 id="userName">...</h3><p id="userUsername">@...</p></div>
-      <div class="balance">$<span id="balance">0.00</span></div>
+      <div class="user-info"><h3 id="userName">Player</h3><p id="userUsername">@username</p></div>
+      <div class="balance"><i class="fas fa-dollar-sign" style="margin-right:2px;"></i><span id="balance">0.00</span></div>
     </div>
     
-    <!-- ===== BANNER ALANLARI ===== -->
-    <div class="banner-area">
-      <!-- Display Banner (Gösterim) -->
-      <div class="display-banner" id="displayBanner">
-        <i class="fas fa-ad banner-icon"></i>
-        <div class="banner-content">
-          <div class="banner-title">Your Ad Here</div>
-          <div class="banner-desc">Display Banner • 320x50</div>
-        </div>
+    <!-- 300x250 BANNER -->
+    <div class="ad-banner-container">
+      <ins style="width:300px;height:250px;display:block;" data-width="300" data-height="250" class="h76eb524ab3" data-domain="//data527.click" data-affquery="/3553437874069ba24832/76eb524ab3/?placementName=default">
+        <script src="//data527.click/js/responsive.js" async></script>
+      </ins>
+    </div>
+    
+    <div class="stats-card">
+      <div class="level-row">
+        <span class="level-badge"><i class="fas fa-crown" style="margin-right:6px;"></i>Level <span id="level">1</span></span>
+        <span class="limit-badge" id="limitBadge"><i class="fas fa-clock" style="margin-right:6px;"></i><span id="playedToday">0</span>/240 min</span>
       </div>
-      
-      <!-- Click Banner (Tıklamalı Ödüllü) -->
-      <div class="click-banner" id="clickBanner" onclick="onBannerClick()">
-        <i class="fas fa-gift banner-icon" style="color:var(--warning);"></i>
-        <div class="banner-content">
-          <div class="banner-title">🎁 Claim Your Reward!</div>
-          <div class="banner-desc">Click to earn <span id="bannerReward">$0.010</span></div>
-        </div>
-        <div class="banner-badge gold" id="bannerCooldown">READY</div>
+      <div class="progress-bar"><div class="progress-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="earning-row">
+        <span><span id="xp">0</span> / <span id="xpNext">500</span> XP</span>
+        <span><i class="fas fa-bolt" style="color:#6c47ff;"></i> $<span id="earningRate">0.0010</span>/min</span>
+      </div>
+      <div class="auto-pay">
+        <i class="fas fa-sync-alt fa-spin"></i>
+        <span>Next payment in</span>
+        <span id="paymentTimer" style="font-weight:800;">60s</span>
       </div>
     </div>
     
-    <div class="xp-card">
-      <div class="level-row"><span class="level-badge"><i class="fas fa-star"></i> Lv.<span id="level">1</span></span><span id="earningRate">$0.002/min</span></div>
-      <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
-      <div style="text-align:right; font-size:0.8rem; margin-top:4px;"><span id="xp">0</span>/<span id="xpNext">100</span> XP</div>
-    </div>
-    
-    <!-- Sayfalar -->
     <div class="page active" id="homePage">
-      <div class="daily-card">
-        <div style="display:flex; justify-content:space-between;"><span><i class="fas fa-gift"></i> Daily Reward</span><span><i class="fas fa-fire"></i> <span id="streak">0</span> days</span></div>
-        <div class="streak" id="streakDays"></div>
-        <button class="claim-btn" id="claimBtn" onclick="claimDaily()">$<span id="dailyReward">0.005</span> CLAIM</button>
+      <div class="section-header">
+        <h3>Featured Games</h3>
+        <span class="see-all" onclick="window.switchPage('games')">See All <i class="fas fa-arrow-right"></i></span>
       </div>
-      <div class="section-header"><h3>Popular Games</h3><span onclick="switchPage('games')">See All <i class="fas fa-arrow-right"></i></span></div>
       <div class="game-grid" id="featuredGames"></div>
     </div>
     
     <div class="page" id="gamesPage">
-      <div style="background:#fff; border-radius:20px; padding:16px; margin-bottom:16px;"><i class="fas fa-search"></i> <input type="text" id="search" placeholder="Search games..." style="border:none; outline:none; width:90%;"></div>
-      <div id="gamesList"></div>
+      <div class="category-tabs" id="categoryTabs"></div>
+      <div class="game-grid" id="allGamesGrid"></div>
     </div>
     
     <div class="page" id="referralPage">
       <div class="ref-card">
-        <i class="fas fa-users" style="font-size:3rem; color:var(--primary);"></i>
-        <h3 style="margin:16px 0 8px;">Invite Friends</h3>
-        <p style="color:var(--muted); margin-bottom:16px;">Earn <strong style="color:var(--success);">+$0.15</strong> for each friend!</p>
+        <div class="ref-icon"><i class="fas fa-users"></i></div>
+        <div class="ref-title">Invite Friends & Earn</div>
+        <div class="ref-desc">Get <strong style="color:#10b981;">+$0.15</strong> for each friend!</div>
         <div class="ref-link-box" id="refLink">t.me/VariaGAME_bot</div>
         <div class="ref-actions">
-          <button class="ref-btn" onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy</button>
-          <button class="ref-btn share" onclick="shareReferralLink()"><i class="fas fa-share"></i> Share</button>
+          <button class="ref-btn" onclick="window.copyRef()"><i class="fas fa-copy"></i> Copy</button>
+          <button class="ref-btn share" onclick="window.shareRef()"><i class="fas fa-share"></i> Share</button>
         </div>
       </div>
-      <div style="display:flex; gap:12px; margin-bottom:20px;">
-        <div style="flex:1; background:var(--card); border-radius:20px; padding:16px; text-align:center;"><i class="fas fa-user-plus"></i><div style="font-weight:800;" id="refCount">0</div><div style="color:var(--muted);">Invites</div></div>
-        <div style="flex:1; background:var(--card); border-radius:20px; padding:16px; text-align:center;"><i class="fas fa-dollar-sign" style="color:var(--success);"></i><div style="font-weight:800; color:var(--success);">$<span id="refEarned">0.00</span></div><div style="color:var(--muted);">Earned</div></div>
-      </div>
-      <div id="refHistory"></div>
     </div>
     
     <div class="page" id="profilePage">
-      <div class="daily-card">
-        <h4><i class="fas fa-ticket-alt"></i> Promo Code</h4>
-        <div style="display:flex; gap:10px; margin-top:10px;"><input id="promoInput" placeholder="Enter code" style="flex:1; padding:14px; border-radius:16px; border:2px solid #e0e5f2;"><button onclick="applyPromo()" style="background:var(--primary); color:white; border:none; padding:0 20px; border-radius:16px;">Apply</button></div>
+      <div style="background:white; border-radius:32px; padding:24px; margin-bottom:24px; box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+        <h4 style="margin-bottom:16px; color:#1e293b;"><i class="fas fa-ticket-alt" style="color:#6c47ff; margin-right:8px;"></i>Promo Code</h4>
+        <div style="display:flex; gap:10px;">
+          <input id="promoInput" placeholder="Enter code" style="flex:1; padding:16px; border:2px solid #e2e8f0; border-radius:20px; outline:none;">
+          <button onclick="window.applyPromo()" style="background:#6c47ff; color:white; border:none; padding:0 24px; border-radius:20px; font-weight:700;">Apply</button>
+        </div>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
-        <div class="stat-card"><i class="fas fa-chart-line"></i> $<span id="totalEarned">0.00</span></div>
-        <div class="stat-card"><i class="fas fa-gamepad"></i> <span id="gamesPlayed">0</span></div>
-        <div class="stat-card"><i class="fas fa-clock"></i> <span id="totalMinutes">0</span>m</div>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px;">
+        <div style="background:white; border-radius:24px; padding:20px; text-align:center;"><i class="fas fa-chart-line" style="color:#6c47ff; font-size:1.5rem;"></i><div style="font-weight:800; margin-top:8px;">$<span id="totalEarned">0.00</span></div></div>
+        <div style="background:white; border-radius:24px; padding:20px; text-align:center;"><i class="fas fa-gamepad" style="color:#6c47ff; font-size:1.5rem;"></i><div style="font-weight:800; margin-top:8px;"><span id="gamesPlayed">0</span></div></div>
+        <div style="background:white; border-radius:24px; padding:20px; text-align:center;"><i class="fas fa-clock" style="color:#6c47ff; font-size:1.5rem;"></i><div style="font-weight:800; margin-top:8px;"><span id="totalMinutes">0</span>m</div></div>
       </div>
-      <button onclick="openTonModal()" style="background:#0088cc; color:white; border:none; border-radius:20px; padding:20px; width:100%; margin-top:24px;"><i class="fab fa-telegram"></i> Withdraw TON</button>
+      <button onclick="window.openTonModal()" style="background:linear-gradient(135deg,#0088cc,#00aaff); color:white; border:none; border-radius:60px; padding:18px; width:100%; font-weight:700; font-size:1.1rem; box-shadow:0 8px 24px rgba(0,136,204,0.2);"><i class="fab fa-telegram"></i> Withdraw TON</button>
     </div>
   </div>
+  
   <div class="bottom-nav">
-    <div class="nav-item active" data-page="home" onclick="switchPage('home')"><i class="fas fa-home"></i></div>
-    <div class="nav-item" data-page="games" onclick="switchPage('games')"><i class="fas fa-gamepad"></i></div>
-    <div class="nav-item" data-page="referral" onclick="switchPage('referral')"><i class="fas fa-users"></i></div>
-    <div class="nav-item" data-page="profile" onclick="switchPage('profile')"><i class="fas fa-user"></i></div>
+    <div class="nav-item active" data-page="home" onclick="window.switchPage('home')"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item" data-page="games" onclick="window.switchPage('games')"><i class="fas fa-gamepad"></i><span>Games</span></div>
+    <div class="nav-item" data-page="referral" onclick="window.switchPage('referral')"><i class="fas fa-users"></i><span>Referral</span></div>
+    <div class="nav-item" data-page="profile" onclick="window.switchPage('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
   </div>
 </div>
 
-<!-- REKLAM GÖREV MODALI -->
 <div class="modal" id="adModal">
   <div class="modal-content">
-    <div class="modal-header"><h3><i class="fas fa-ad"></i> Watch Ad to Play</h3><span class="close-btn" onclick="closeModal('adModal')">&times;</span></div>
-    <p style="text-align:center;">Complete the task to open the game</p>
+    <div class="modal-header"><h3><i class="fas fa-ad" style="color:#6c47ff;"></i> Watch Ad to Play</h3><div class="modal-close" onclick="window.closeModal('adModal')">&times;</div></div>
+    <p style="color:#64748b; text-align:center;">Complete the task to unlock the game</p>
     <div class="task-indicator" id="taskIndicator">0/1</div>
-    <button class="ad-btn" onclick="completeAdTask()"><i class="fas fa-play"></i> Watch Ad</button>
-    <p style="text-align:center; margin-top:16px; cursor:pointer;" onclick="closeModal('adModal')">Cancel</p>
+    <button class="ad-btn" onclick="window.completeAdTask()"><i class="fas fa-play"></i> Watch Advertisement</button>
+    <p style="color:#94a3b8; text-align:center; margin-top:16px; cursor:pointer;" onclick="window.closeModal('adModal')">Cancel</p>
   </div>
 </div>
 
-<!-- TON ÇEKİM MODALI -->
 <div class="modal" id="tonModal">
   <div class="modal-content">
-    <div class="modal-header"><h3>Withdraw TON</h3><span class="close-btn" onclick="closeModal('tonModal')">&times;</span></div>
-    <p>Balance: $<span id="tonBalance">0.00</span></p>
-    <p>1 TON ≈ $<span id="liveTon">...</span></p>
-    <input id="tonAddress" placeholder="UQ... wallet address" style="width:100%; padding:16px; border-radius:16px; border:2px solid #e0e5f2; margin:16px 0;">
-    <button onclick="requestTonCashout()" style="background:#0088cc; color:white; padding:16px; width:100%; border:none; border-radius:16px;">Request Withdrawal</button>
+    <div class="modal-header"><h3>Withdraw TON</h3><div class="modal-close" onclick="window.closeModal('tonModal')">&times;</div></div>
+    <p style="color:#1e293b; font-weight:600;">Available: $<span id="tonBalance">0.00</span></p>
+    <p style="color:#64748b; margin-bottom:16px;">1 TON ≈ $<span id="liveTon">2.45</span></p>
+    <input id="tonAddress" placeholder="UQ... wallet address" style="width:100%; padding:16px; border-radius:20px; border:2px solid #e2e8f0; margin-bottom:20px; outline:none;">
+    <button onclick="window.requestTon()" style="background:linear-gradient(135deg,#0088cc,#00aaff); color:white; padding:16px; width:100%; border:none; border-radius:60px; font-weight:700;">Request Withdrawal</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  const tg = window.Telegram.WebApp;
+  var tg = window.Telegram.WebApp;
   tg.ready(); tg.expand();
   
-  let db, userData, userId, bannerCooldown = false, cooldownTimer = 60000, lastBannerClick = 0;
-  const firebaseConfig = {
-    apiKey: "AIzaSyATlWEp-GRv37SP2nPeeXLrYun8MG5KvLk",
-    authDomain: "variagame-79b3d.firebaseapp.com",
-    projectId: "variagame-79b3d",
-    storageBucket: "variagame-79b3d.firebasestorage.app",
-    messagingSenderId: "661347349467",
-    appId: "1:661347349467:web:15237c4e8fecf15ac32dfe"
+  var db, userData, userId, timer, pendingGame;
+  var DAILY = 240, BASE_RATE = 0.001, REF_BONUS = 0.15;
+  var firebaseConfig = {apiKey:"AIzaSyATlWEp-GRv37SP2nPeeXLrYun8MG5KvLk",authDomain:"variagame-79b3d.firebaseapp.com",projectId:"variagame-79b3d",storageBucket:"variagame-79b3d.firebasestorage.app",messagingSenderId:"661347349467",appId:"1:661347349467:web:15237c4e8fecf15ac32dfe"};
+  
+  var gamesDB = [
+    {ad:"2048", kategori:"Puzzle", embed:"2048", icon:"fa-th"},
+    {ad:"Subway Surfers", kategori:"Action", embed:"subway", icon:"fa-train-subway"},
+    {ad:"Hill Climb", kategori:"Racing", embed:"hillclimb", icon:"fa-car"},
+    {ad:"8 Ball Pool", kategori:"Sports", embed:"8ball", icon:"fa-circle"}
+  ];
+  
+  // Video
+  var video = document.getElementById('loadingVideo');
+  var videoContainer = document.getElementById('videoContainer');
+  var splashScreen = document.getElementById('splashScreen');
+  var languageSelector = document.getElementById('languageSelector');
+  
+  video.addEventListener('loadeddata', function(){ console.log('Video ready'); });
+  video.addEventListener('ended', function(){ window.skipVideo(); });
+  video.addEventListener('error', function(){ console.log('Video error, skipping...'); window.skipVideo(); });
+  
+  window.skipVideo = function(){
+    if(video) video.pause();
+    if(videoContainer) videoContainer.style.display = 'none';
+    if(splashScreen) splashScreen.style.display = 'flex';
+    setTimeout(function(){
+      if(splashScreen) splashScreen.style.display = 'none';
+      if(languageSelector) languageSelector.classList.remove('hidden');
+    }, 2000);
   };
   
-  let currentLanguage = 'en';
-  let onboardingData = { age: null, genres: [], frequency: null };
-  
-  // ===== VİDEO =====
-  const video = document.getElementById('loadingVideo');
-  const videoContainer = document.getElementById('videoContainer');
-  const splashScreen = document.getElementById('splashScreen');
-  const languageSelector = document.getElementById('languageSelector');
-  const onboarding = document.getElementById('onboarding');
-  
-  video.addEventListener('loadeddata', () => console.log('✅ Video yüklendi'));
-  video.addEventListener('error', () => { videoContainer.style.display = 'none'; splashScreen.classList.add('fade-out'); setTimeout(() => { splashScreen.style.display = 'none'; languageSelector.classList.remove('hidden'); }, 800); });
-  video.addEventListener('ended', () => { videoContainer.style.display = 'none'; splashScreen.classList.add('fade-out'); setTimeout(() => { splashScreen.style.display = 'none'; languageSelector.classList.remove('hidden'); }, 800); });
-  
-  window.skipVideo = () => { video.pause(); videoContainer.style.display = 'none'; splashScreen.classList.add('fade-out'); setTimeout(() => { splashScreen.style.display = 'none'; languageSelector.classList.remove('hidden'); }, 500); };
-  
-  // ===== DİL =====
-  window.selectLanguage = (lang) => { document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active')); document.querySelector(`[data-lang="${lang}"]`).classList.add('active'); currentLanguage = lang; };
-  window.confirmLanguage = () => { languageSelector.classList.add('hidden'); onboarding.classList.remove('hidden'); };
-  
-  // ===== ONBOARDING =====
-  window.selectAge = (a) => { document.querySelectorAll('[data-step="1"] .select-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); onboardingData.age = a; };
-  window.selectGenre = (g) => { event.currentTarget.classList.toggle('active'); if(event.currentTarget.classList.contains('active')) onboardingData.genres.push(g); else onboardingData.genres = onboardingData.genres.filter(x => x!==g); };
-  window.selectFrequency = (f) => { document.querySelectorAll('[data-step="3"] .select-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); onboardingData.frequency = f; };
-  window.nextOnboardingStep = (s) => { document.querySelectorAll('.onboarding-step').forEach(e => e.classList.remove('active')); document.querySelector(`[data-step="${s}"]`).classList.add('active'); };
-  window.completeOnboarding = () => { onboarding.classList.add('hidden'); initApp(); };
-  
-  // ===== ANA UYGULAMA =====
-  async function initApp() {
-    document.getElementById('dbLoading').style.display = 'flex';
-    try {
-      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : 'demo_' + Date.now();
-      
-      const userRef = db.collection('users').doc(userId);
-      const docSnap = await userRef.get();
-      
-      if (!docSnap.exists) {
-        userData = { balance: 5.0, streak: 0, lastClaim: null, gamesPlayed: 0, totalEarned: 5.0, totalMinutes: 0, xp: 0, level: 1, refCode: generateCode(), referralCount: 0, referralEarnings: 0 };
-        await userRef.set(userData);
-      } else userData = docSnap.data();
-      
-      userRef.onSnapshot(snap => { if(snap.exists) { userData = snap.data(); updateUI(); } });
-      
-      updateUI();
-      loadGames();
-      document.getElementById('dbLoading').style.display = 'none';
-      document.getElementById('mainApp').classList.add('active');
-      setInterval(fetchTonPrice, 5000); fetchTonPrice();
-    } catch(e) {
-      console.error('Init error:', e);
-      useLocalStorage();
-      document.getElementById('dbLoading').style.display = 'none';
-      document.getElementById('mainApp').classList.add('active');
-    }
-  }
-  
-  function useLocalStorage() {
-    const saved = localStorage.getItem('variaUser');
-    userData = saved ? JSON.parse(saved) : { balance: 5.0, streak: 0, lastClaim: null, gamesPlayed: 0, totalEarned: 5.0, totalMinutes: 0, xp: 0, level: 1, referralCount: 0, referralEarnings: 0 };
-    setInterval(() => localStorage.setItem('variaUser', JSON.stringify(userData)), 2000);
-  }
-  
-  function generateCode() { return Math.random().toString(36).substring(2, 10).toUpperCase(); }
-  
-  function updateUI() {
-    document.getElementById('balance').textContent = (userData.balance || 0).toFixed(2);
-    document.getElementById('totalEarned').textContent = (userData.totalEarned || 0).toFixed(2);
-    document.getElementById('gamesPlayed').textContent = userData.gamesPlayed || 0;
-    document.getElementById('totalMinutes').textContent = Math.floor(userData.totalMinutes || 0);
-    document.getElementById('level').textContent = userData.level || 1;
-    document.getElementById('streak').textContent = userData.streak || 0;
-    document.getElementById('refCount').textContent = userData.referralCount || 0;
-    document.getElementById('refEarned').textContent = (userData.referralEarnings || 0).toFixed(2);
-    document.getElementById('userName').textContent = tg.initDataUnsafe?.user?.first_name || 'Player';
-    document.getElementById('userUsername').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : '';
-    document.getElementById('refLink').textContent = `t.me/VariaGAME_bot?startapp=${userId}`;
-    renderStreak();
-    updateBannerUI();
-  }
-  
-  function renderStreak() {
-    let days = ['M','T','W','T','F','S','S'], html = '', today = new Date().toISOString().split('T')[0];
-    for (let i=0; i<7; i++) {
-      let cls = 'day';
-      if (i < (userData.streak||0)) cls = 'day done';
-      if (i === (userData.streak||0) && userData.lastClaim !== today) cls = 'day current';
-      html += `<div class="${cls}">${days[i]}</div>`;
-    }
-    document.getElementById('streakDays').innerHTML = html;
-  }
-  
-  function updateBannerUI() {
-    const now = Date.now();
-    const cooldownRemaining = Math.max(0, lastBannerClick + cooldownTimer - now);
-    if (cooldownRemaining > 0) {
-      document.getElementById('clickBanner').style.opacity = '0.6';
-      document.getElementById('bannerCooldown').textContent = Math.ceil(cooldownRemaining/1000) + 's';
-    } else {
-      document.getElementById('clickBanner').style.opacity = '1';
-      document.getElementById('bannerCooldown').textContent = 'READY';
-    }
-  }
-  
-  window.onBannerClick = () => {
-    const now = Date.now();
-    if (now - lastBannerClick < cooldownTimer) {
-      showToast('⏳ Please wait ' + Math.ceil((lastBannerClick + cooldownTimer - now)/1000) + 's', true);
-      return;
-    }
-    lastBannerClick = now;
-    const reward = 0.01;
-    userData.balance = (userData.balance || 0) + reward;
-    userData.totalEarned = (userData.totalEarned || 0) + reward;
-    updateUI();
-    showToast(`🎉 +$${reward.toFixed(3)} earned!`);
-    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    updateBannerUI();
-    setTimeout(updateBannerUI, 1000);
+  window.selectLanguage = function(l){
+    document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelector('.lang-btn[data-lang="'+l+'"]').classList.add('active');
   };
   
-  async function claimDaily() {
-    let today = new Date().toISOString().split('T')[0];
-    if (userData.lastClaim === today) return showToast('Already claimed!', true);
-    userData.streak = (userData.lastClaim === new Date(Date.now()-86400000).toISOString().split('T')[0]) ? Math.min((userData.streak||0)+1, 7) : 1;
-    userData.lastClaim = today;
-    userData.balance = (userData.balance || 0) + 0.005;
-    userData.totalEarned = (userData.totalEarned || 0) + 0.005;
-    updateUI();
-    showToast('✅ +$0.005 Daily Reward!');
-    if (db) await db.collection('users').doc(userId).update({ streak: userData.streak, lastClaim: today, balance: userData.balance, totalEarned: userData.totalEarned });
-  }
-  
-  function loadGames() {
-    let games = [{ ad: '2048', embed: '2048', resim: '2048.png' }];
-    let html = games.map(g => `<div class="game-card" onclick="showAdTask('${g.embed}')"><div class="game-thumb"><img src="${g.resim}"></div><h4>${g.ad}</h4></div>`).join('');
-    document.getElementById('featuredGames').innerHTML = html;
-    document.getElementById('gamesList').innerHTML = html;
-  }
-  
-  window.showAdTask = (gameId) => {
-    document.getElementById('taskIndicator').className = 'task-indicator';
-    document.getElementById('taskIndicator').textContent = '0/1';
-    document.getElementById('adModal').classList.add('active');
-    window.pendingGame = gameId;
+  window.confirmLanguage = function(){
+    document.getElementById('languageSelector').classList.add('hidden');
+    document.getElementById('onboarding').classList.remove('hidden');
   };
   
-  window.completeAdTask = () => {
-    document.getElementById('taskIndicator').className = 'task-indicator done';
-    document.getElementById('taskIndicator').textContent = '1/1';
-    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    setTimeout(() => {
-      closeModal('adModal');
-      if (window.pendingGame === '2048') window.location.href = '2048.html';
+  window.selectAge = function(a){
+    document.querySelectorAll('[data-step="1"] .opt-btn').forEach(function(b){ b.classList.remove('active'); });
+    event.currentTarget.classList.add('active');
+  };
+  
+  window.selectGenre = function(g){ event.currentTarget.classList.toggle('active'); };
+  
+  window.selectFrequency = function(f){
+    document.querySelectorAll('[data-step="3"] .opt-btn').forEach(function(b){ b.classList.remove('active'); });
+    event.currentTarget.classList.add('active');
+  };
+  
+  window.nextOnboardingStep = function(s){
+    document.querySelectorAll('.onboard-step').forEach(function(e){ e.classList.remove('active'); });
+    document.querySelector('.onboard-step[data-step="'+s+'"]').classList.add('active');
+  };
+  
+  window.completeOnboarding = function(){
+    document.getElementById('onboarding').classList.add('hidden');
+    initApp();
+  };
+  
+  window.switchPage = function(p){
+    document.querySelectorAll('.page').forEach(function(pg){ pg.classList.remove('active'); });
+    document.getElementById(p+'Page').classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+    document.querySelector('.nav-item[data-page="'+p+'"]').classList.add('active');
+  };
+  
+  window.openModal = function(id){ document.getElementById(id).classList.add('active'); };
+  window.closeModal = function(id){ document.getElementById(id).classList.remove('active'); };
+  
+  window.showToast = function(msg, err){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = err ? '#ef4444' : '#1e293b';
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 3000);
+  };
+  
+  window.copyRef = function(){
+    navigator.clipboard.writeText('https://t.me/VariaGAME_bot?startapp='+userId);
+    window.showToast('✅ Link copied!');
+  };
+  
+  window.shareRef = function(){
+    tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent('https://t.me/VariaGAME_bot?startapp='+userId)+'&text=Play and earn TON!');
+  };
+  
+  window.openTonModal = function(){ 
+    document.getElementById('tonBalance').textContent = (userData?.balance||0).toFixed(3);
+    window.openModal('tonModal'); 
+  };
+  
+  window.requestTon = function(){
+    var addr = document.getElementById('tonAddress').value;
+    if(!addr.startsWith('UQ')) return window.showToast('Invalid TON address', true);
+    window.showToast('✅ Withdrawal requested!');
+    window.closeModal('tonModal');
+  };
+  
+  window.applyPromo = function(){ window.showToast('Invalid promo code', true); };
+  
+  window.showAdTask = function(gameId){
+    pendingGame = gameId;
+    var indicator = document.getElementById('taskIndicator');
+    indicator.className = 'task-indicator';
+    indicator.textContent = '0/1';
+    window.openModal('adModal');
+  };
+  
+  window.completeAdTask = function(){
+    var indicator = document.getElementById('taskIndicator');
+    indicator.className = 'task-indicator done';
+    indicator.textContent = '1/1';
+    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    setTimeout(function(){
+      window.closeModal('adModal');
+      if(pendingGame === '2048') window.location.href = '2048.html';
     }, 500);
   };
   
-  function switchPage(p) { document.querySelectorAll('.page').forEach(e => e.classList.remove('active')); document.getElementById(p+'Page').classList.add('active'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.querySelector(`[data-page="${p}"]`).classList.add('active'); }
-  function openModal(id) { document.getElementById(id).classList.add('active'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-  function showToast(msg, err) { let t = document.getElementById('toast'); t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--success)'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-  async function fetchTonPrice() { try { let r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TONUSDT'); let d = await r.json(); document.getElementById('tonPrice').textContent = parseFloat(d.price).toFixed(2); document.getElementById('liveTon').textContent = parseFloat(d.price).toFixed(2); } catch(e) {} }
-  window.openTonModal = () => { document.getElementById('tonBalance').textContent = (userData.balance||0).toFixed(2); openModal('tonModal'); };
-  window.requestTonCashout = () => { let addr = document.getElementById('tonAddress').value; if (!addr.startsWith('UQ')) return showToast('Invalid TON address!', true); showToast('✅ Withdrawal requested!'); closeModal('tonModal'); };
-  window.copyReferralLink = () => { navigator.clipboard?.writeText('https://t.me/VariaGAME_bot?startapp='+userId); showToast('✅ Link copied!'); };
-  window.shareReferralLink = () => { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/VariaGAME_bot?startapp='+userId)}&text=Play and earn TON!`); };
-  window.applyPromo = () => showToast('Invalid promo code', true);
+  window.filterCategory = function(cat){
+    document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
+    event.target.classList.add('active');
+    renderGames(cat);
+  };
   
-  window.switchPage = switchPage;
-  window.closeModal = closeModal;
-  window.openModal = openModal;
+  async function initApp(){
+    document.getElementById('dbLoading').style.display = 'flex';
+    try{
+      if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : 'demo_'+Date.now();
+      var ref = db.collection('users').doc(userId);
+      var snap = await ref.get();
+      if(!snap.exists){
+        userData = {balance:0, todayPlayed:0, lastReset:new Date().toISOString().split('T')[0], xp:0, level:1, totalEarned:0, totalMinutes:0, gamesPlayed:0, refCode:Math.random().toString(36).substring(2,10), referralCount:0, referralEarnings:0};
+        await ref.set(userData);
+      }else{
+        userData = snap.data();
+        checkReset();
+      }
+      ref.onSnapshot(function(s){ if(s.exists){ userData = s.data(); updateUI(); } });
+      startPayment(); updateUI(); renderGames('All');
+      document.getElementById('dbLoading').style.display = 'none';
+      document.getElementById('mainApp').classList.add('active');
+      setInterval(fetchTon, 8000); fetchTon();
+    }catch(e){
+      console.log('Firebase error, using localStorage');
+      useLocal();
+    }
+  }
+  
+  function checkReset(){
+    var today = new Date().toISOString().split('T')[0];
+    if(userData.lastReset !== today){
+      userData.todayPlayed = 0;
+      userData.lastReset = today;
+      if(db) db.collection('users').doc(userId).update({todayPlayed:0, lastReset:today});
+    }
+  }
+  
+  function startPayment(){
+    var sec = 60;
+    timer = setInterval(function(){
+      sec--;
+      document.getElementById('paymentTimer').textContent = sec + 's';
+      if(sec <= 0){ sec = 60; processPayment(); }
+    }, 1000);
+  }
+  
+  function processPayment(){
+    checkReset();
+    if((userData.todayPlayed||0) >= DAILY) return updateLimitBadge();
+    var earned = BASE_RATE;
+    userData.balance += earned;
+    userData.totalEarned += earned;
+    userData.todayPlayed = (userData.todayPlayed||0) + 1;
+    userData.totalMinutes = (userData.totalMinutes||0) + 1;
+    userData.xp = (userData.xp||0) + 5;
+    checkLevel();
+    updateUI();
+    if(db) db.collection('users').doc(userId).update({balance:userData.balance, totalEarned:userData.totalEarned, todayPlayed:userData.todayPlayed, totalMinutes:userData.totalMinutes, xp:userData.xp, level:userData.level});
+    updateLimitBadge();
+    window.showToast('💰 +$'+earned.toFixed(3)+' earned!');
+  }
+  
+  function checkLevel(){
+    var req = Math.floor(500 * Math.pow(1.1, (userData.level||1) - 1));
+    while(userData.xp >= req && userData.level < 10){
+      userData.level++;
+      userData.xp -= req;
+      window.showToast('🎯 Level Up! Level '+userData.level+'!');
+    }
+  }
+  
+  function updateUI(){
+    document.getElementById('balance').textContent = (userData.balance||0).toFixed(3);
+    document.getElementById('totalEarned').textContent = (userData.totalEarned||0).toFixed(2);
+    document.getElementById('gamesPlayed').textContent = userData.gamesPlayed||0;
+    document.getElementById('totalMinutes').textContent = Math.floor(userData.totalMinutes||0);
+    document.getElementById('level').textContent = userData.level||1;
+    document.getElementById('playedToday').textContent = userData.todayPlayed||0;
+    document.getElementById('xp').textContent = userData.xp||0;
+    var req = Math.floor(500 * Math.pow(1.1, (userData.level||1) - 1));
+    document.getElementById('xpNext').textContent = req;
+    document.getElementById('xpFill').style.width = Math.min(((userData.xp||0)/req)*100, 100) + '%';
+    document.getElementById('earningRate').textContent = BASE_RATE.toFixed(4);
+    document.getElementById('userName').textContent = tg.initDataUnsafe?.user?.first_name || 'Player';
+    document.getElementById('userUsername').textContent = tg.initDataUnsafe?.user?.username ? '@'+tg.initDataUnsafe.user.username : '';
+    document.getElementById('refLink').textContent = 't.me/VariaGAME_bot?startapp='+userId;
+    if(tg.initDataUnsafe?.user?.photo_url){
+      document.getElementById('avatar').style.backgroundImage = 'url('+tg.initDataUnsafe.user.photo_url+')';
+      document.getElementById('avatar').textContent = '';
+    }else{
+      document.getElementById('avatar').textContent = (tg.initDataUnsafe?.user?.first_name || 'V').charAt(0);
+    }
+  }
+  
+  function updateLimitBadge(){
+    var p = userData.todayPlayed||0;
+    var b = document.getElementById('limitBadge');
+    b.innerHTML = '<i class="fas fa-clock" style="margin-right:6px;"></i>'+p+'/240 min';
+    if(p >= DAILY){
+      b.classList.add('full');
+    }else{
+      b.classList.remove('full');
+    }
+  }
+  
+  function renderGames(filterCat){
+    var cats = ['All'];
+    gamesDB.forEach(function(g){ if(cats.indexOf(g.kategori) === -1) cats.push(g.kategori); });
+    document.getElementById('categoryTabs').innerHTML = cats.map(function(c){ return '<span class="cat-btn '+(c===filterCat?'active':'')+'" onclick="window.filterCategory(\''+c+'\')">'+c+'</span>'; }).join('');
+    var filtered = filterCat === 'All' ? gamesDB : gamesDB.filter(function(g){ return g.kategori === filterCat; });
+    var html = filtered.map(function(g){ return '<div class="game-card" onclick="window.showAdTask(\''+g.embed+'\')"><div class="game-thumb"><i class="fas '+g.icon+'"></i></div><h4>'+g.ad+'</h4><p>'+g.kategori+'</p></div>'; }).join('');
+    document.getElementById('allGamesGrid').innerHTML = html;
+    document.getElementById('featuredGames').innerHTML = gamesDB.slice(0,4).map(function(g){ return '<div class="game-card" onclick="window.showAdTask(\''+g.embed+'\')"><div class="game-thumb"><i class="fas '+g.icon+'"></i></div><h4>'+g.ad+'</h4></div>'; }).join('');
+  }
+  
+  function useLocal(){
+    var saved = localStorage.getItem('variaUser');
+    userData = saved ? JSON.parse(saved) : {balance:0, todayPlayed:0, lastReset:new Date().toISOString().split('T')[0], xp:0, level:1, totalEarned:0, totalMinutes:0, gamesPlayed:0, referralCount:0, referralEarnings:0};
+    checkReset(); startPayment(); updateUI(); renderGames('All');
+    document.getElementById('dbLoading').style.display = 'none';
+    document.getElementById('mainApp').classList.add('active');
+    setInterval(function(){ localStorage.setItem('variaUser', JSON.stringify(userData)); }, 2000);
+  }
+  
+  async function fetchTon(){
+    try{
+      var r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TONUSDT');
+      var d = await r.json();
+      document.getElementById('tonPrice').textContent = parseFloat(d.price).toFixed(2);
+      document.getElementById('liveTon').textContent = parseFloat(d.price).toFixed(2);
+    }catch(e){}
+  }
 </script>
 </body>
 </html>
