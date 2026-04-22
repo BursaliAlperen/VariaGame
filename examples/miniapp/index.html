@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini App Örnek</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg1: #f7f9ff;
+      --bg2: #e8efff;
+      --glass: rgba(255,255,255,.62);
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #5b7cfa;
+    }
+    * { box-sizing: border-box; font-family: -apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 10%, #ffffff, transparent 35%),
+                  radial-gradient(circle at 90% 90%, #dbe6ff, transparent 30%),
+                  linear-gradient(145deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      padding: 20px;
+    }
+    .card {
+      width: min(520px, 94vw);
+      border-radius: 28px;
+      padding: 20px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.65);
+      box-shadow: 0 16px 40px rgba(36,52,91,.12), inset 0 1px 0 rgba(255,255,255,.75);
+    }
+    h1 { margin: 4px 0 12px; font-size: 26px; }
+    p { margin: 0 0 14px; color: var(--muted); }
+    .gif-wrap {
+      border-radius: 22px;
+      overflow: hidden;
+      background: rgba(255,255,255,.45);
+      border: 1px solid rgba(255,255,255,.55);
+    }
+    img { width: 100%; display: block; }
+    .actions {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .copy { background: #fff; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Mini App Demo</h1>
+    <p>GIF otomatik oynar. MainButton ile dış link açılır, ikinci buton davet linkini kopyalar.</p>
+
+    <div class="gif-wrap">
+      <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2E5b2I2ZGhoZWw4MzVwdnU5MjI0M2V5dXh5NjN1MzlrbXNjN29qYyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ICOgUNjpvO0PC/giphy.gif" alt="Auto GIF" />
+    </div>
+
+    <div class="actions">
+      <button id="copyInvite" class="copy">Davet Linkini Kopyala</button>
+    </div>
+  </main>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    const user = tg.initDataUnsafe?.user;
+    const userId = user?.id ? String(user.id) : 'guest';
+    const botUsername = 'MyBot'; // KENDİ BOT USERNAME'İNİZ İLE DEĞİŞTİRİN
+    const inviteLink = `https://t.me/${botUsername}?start=ref_${userId}`;
+
+    tg.MainButton.setText('Linki Aç');
+    tg.MainButton.show();
+    tg.MainButton.onClick(() => {
+      tg.openLink('https://telegram.org');
+    });
+
+    document.getElementById('copyInvite').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(inviteLink);
+        tg.showPopup({
+          title: 'Başarılı',
+          message: 'Davet linki panoya kopyalandı!\n' + inviteLink,
+          buttons: [{ type: 'ok' }]
+        });
+      } catch (e) {
+        tg.showAlert('Kopyalama başarısız: ' + e.message);
+      }
+    });
+  </script>
+</body>
+</html>
