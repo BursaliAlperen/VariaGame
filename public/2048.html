@@ -1,644 +1,138 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>✨ 2048 · Glass & Reklam Banner</title>
-  <!-- Font Awesome 6.5.1 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Telegram Web App -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>2048 - VariaGame</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(145deg, #f0f4fa 0%, #d9e2ef 100%);
-      backdrop-filter: blur(2px);
-      padding: 12px;
-      margin: 0;
-      touch-action: pan-y;
-    }
-
-    .game-wrapper {
-      max-width: 480px;
-      width: 100%;
-      border-radius: 48px;
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 25px 40px -10px rgba(0, 20, 40, 0.2),
-                  0 2px 8px rgba(255, 255, 255, 0.6) inset,
-                  0 -2px 4px rgba(0, 0, 0, 0.02) inset;
-      padding: 22px 20px 28px;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      transition: all 0.2s;
-    }
-
-    /* ---------- BOŞ REKLAM BANNER (ÜST) ---------- */
-    .top-banner {
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 24px;
-      margin-bottom: 20px;
-      border: 1px dashed rgba(255,255,255,0.8);
-      box-shadow: 0 8px 18px rgba(0,20,40,0.05), 0 0 0 1px rgba(255,255,255,0.3) inset;
-      min-height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #3a5a7a;
-      font-size: 14px;
-      font-weight: 400;
-      letter-spacing: 0.5px;
-      animation: softPulse 3s infinite alternate;
-      /* Reklam kodu buraya gelecek */
-    }
-
-    .top-banner::before {
-      content: "📢 REKLAM ALANI (Advertica vb.)";
-      opacity: 0.6;
-    }
-
-    @keyframes softPulse {
-      0% { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.2); }
-      100% { border-color: rgba(200,220,255,0.9); background: rgba(255,255,255,0.35); }
-    }
-
-    /* ---------- HEADER ---------- */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .scores {
-      display: flex;
-      gap: 15px;
-    }
-
-    .score-card, .best-card {
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      padding: 10px 18px;
-      border-radius: 60px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.02), 0 0 0 1px rgba(255,255,255,0.6) inset;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.4);
-    }
-
-    .score-label {
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      color: #3a4a5c;
-      text-transform: uppercase;
-    }
-
-    .score-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #1e2f3f;
-      line-height: 1.2;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-    }
-
-    .icon-btn {
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.7);
-      padding: 10px 16px;
-      border-radius: 60px;
-      font-size: 20px;
-      color: #1e3b5c;
-      box-shadow: 0 8px 14px rgba(0,0,0,0.04), 0 1px 0 #ffffff inset;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 52px;
-      height: 52px;
-    }
-
-    .menu-btn {
-      padding: 10px 22px;
-      width: auto;
-      gap: 6px;
-      font-weight: 600;
-      font-size: 16px;
-    }
-
-    .icon-btn:active {
-      transform: scale(0.94);
-      background: rgba(255,255,255,0.7);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-
-    /* ---------- GRID ---------- */
-    .grid-container {
-      position: relative;
-      background: rgba(210, 225, 245, 0.35);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 28px;
-      padding: 14px;
-      box-shadow: 0 20px 30px -8px rgba(0,20,40,0.15),
-                  0 0 0 1px rgba(255,255,255,0.6) inset;
-      border: 1px solid rgba(255,255,255,0.3);
-      touch-action: none;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      aspect-ratio: 1 / 1;
-    }
-
-    .tile {
-      background: rgba(255, 255, 255, 0.5);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 2.2rem;
-      color: #1e3b5c;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.5) inset, 0 6px 0 rgba(0,0,0,0.02);
-      transition: all 0.12s;
-      aspect-ratio: 1 / 1;
-      border: 1px solid rgba(255,255,255,0.5);
-      position: relative;
-    }
-
-    .tile[data-value="2"] { background: rgba(255, 255, 255, 0.8); color: #2c3e4e; }
-    .tile[data-value="4"] { background: rgba(255, 245, 220, 0.85); color: #2c3e4e; }
-    .tile[data-value="8"] { background: rgba(255, 220, 160, 0.9); color: #1f2e3c; }
-    .tile[data-value="16"] { background: rgba(255, 190, 130, 0.9); color: #1f2e3c; }
-    .tile[data-value="32"] { background: rgba(255, 155, 120, 0.9); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    .tile[data-value="64"] { background: rgba(255, 110, 90, 0.95); color: white; }
-    .tile[data-value="128"] { background: rgba(250, 200, 100, 0.95); color: white; font-size: 1.9rem; }
-    .tile[data-value="256"] { background: rgba(245, 180, 80, 0.95); color: white; font-size: 1.9rem; }
-    .tile[data-value="512"] { background: rgba(235, 150, 70, 0.95); color: white; font-size: 1.8rem; }
-    .tile[data-value="1024"] { background: rgba(220, 120, 60, 0.95); color: white; font-size: 1.6rem; }
-    .tile[data-value="2048"] { background: rgba(200, 90, 50, 0.95); color: white; font-size: 1.6rem; box-shadow: 0 0 18px #ffb56b; }
-    .tile[data-value="4096"] { background: rgba(160, 60, 50, 0.95); color: white; font-size: 1.4rem; }
-
-    .tile-new {
-      animation: pop-in 0.18s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    }
-    .tile-merged {
-      animation: merge-pop 0.2s ease-out;
-    }
-    @keyframes pop-in {
-      0% { transform: scale(0); opacity: 0; }
-      80% { transform: scale(1.05); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes merge-pop {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 18px #fff9e6; }
-      100% { transform: scale(1); }
-    }
-
-    /* ---------- ALT REKLAM BANNER (BOŞ) ---------- */
-    .bottom-banner {
-      margin-top: 20px;
-      background: rgba(230, 240, 255, 0.3);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 24px;
-      padding: 12px 18px;
-      border: 1px dashed rgba(255,255,255,0.7);
-      min-height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #3a5a7a;
-      font-size: 14px;
-      animation: softPulse 3s infinite alternate;
-      /* Reklam kodu buraya gelecek */
-    }
-
-    .bottom-banner::before {
-      content: "📢 REKLAM ALANI (Advertica vb.)";
-      opacity: 0.6;
-    }
-
-    /* ---------- MODAL ---------- */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(220, 230, 245, 0.3);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal-card {
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
-      padding: 30px 28px;
-      border-radius: 56px;
-      box-shadow: 0 30px 50px rgba(0,20,40,0.15), 0 0 0 1.5px rgba(255,255,255,0.7) inset;
-      text-align: center;
-      max-width: 340px;
-      width: 90%;
-      border: 1px solid rgba(255,255,255,0.6);
-    }
-
-    .modal-card h2 {
-      font-size: 34px;
-      font-weight: 700;
-      color: #1e3b5c;
-      margin-bottom: 20px;
-    }
-
-    .new-game-btn {
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(8px);
-      border: 1px solid white;
-      padding: 16px 24px;
-      border-radius: 60px;
-      font-size: 20px;
-      font-weight: 700;
-      color: #1e3b5c;
-      box-shadow: 0 12px 18px -6px rgba(0,0,0,0.05), 0 0 0 1px rgba(255,255,255,0.8) inset;
-      cursor: pointer;
-      width: 100%;
-      transition: 0.1s;
-    }
-
-    .new-game-btn:active { transform: scale(0.97); background: white; }
-
-    @media (max-width: 428px) {
-      .game-wrapper { padding: 16px 12px 20px; border-radius: 36px; }
-      .tile { font-size: 1.9rem; border-radius: 16px; }
-      .score-value { font-size: 24px; }
-      .icon-btn { width: 48px; height: 48px; font-size: 18px; }
-      .menu-btn { width: auto; padding: 8px 16px; }
-    }
+    body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(160deg,#eef3ff,#dbe7ff);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+    .wrap{width:min(94vw,480px);padding:16px;border-radius:28px;background:rgba(255,255,255,.58);backdrop-filter:blur(16px);box-shadow:0 10px 30px rgba(0,0,0,.12)}
+    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .score{padding:8px 12px;border-radius:12px;background:#fff;font-weight:700}
+    .grid{position:relative;background:#b8c6ef;border-radius:16px;padding:10px;touch-action:none}
+    .cells{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .cell{aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.28)}
+    .tile{position:absolute;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#25324a;transition:all .15s ease;box-shadow:0 5px 12px rgba(0,0,0,.08)}
+    .n2{background:#eef5ff}.n4{background:#dfeaff}.n8{background:#cce0ff}.n16{background:#bdd6ff}.n32{background:#abc9ff}.n64{background:#95b8ff}
+    .n128,.n256,.n512,.n1024,.n2048{background:#6f98ff;color:#fff}
+    .actions{display:flex;gap:8px;margin-top:12px}
+    button{flex:1;border:none;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:700}
+    .primary{background:#5b7cfa;color:#fff}
   </style>
 </head>
 <body>
-
-<div class="game-wrapper">
-  <!-- BOŞ ÜST REKLAM BANNER (Advertica kodu buraya eklenecek) -->
-  <div class="top-banner" id="adTopBanner"></div>
-
-  <div class="header">
-    <div class="scores">
-      <div class="score-card">
-        <div class="score-label">Score</div>
-        <div class="score-value" id="scoreDisplay">0</div>
-      </div>
-      <div class="best-card">
-        <div class="score-label">Best</div>
-        <div class="score-value" id="bestDisplay">0</div>
+  <div class="wrap">
+    <div class="head">
+      <h2>2048</h2>
+      <div class="score">Score: <span id="score">0</span></div>
+      <div class="score">Best: <span id="best">0</span></div>
+    </div>
+    <div class="grid" id="grid">
+      <div class="cells">
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
       </div>
     </div>
-    <div class="action-buttons">
-      <button class="icon-btn" id="soundToggle" title="Ses Aç/Kapat"><i class="fa-solid fa-volume-high"></i></button>
-      <button class="icon-btn" id="restartButton" title="Yeni Oyun"><i class="fa-solid fa-arrow-rotate-right"></i></button>
-      <button class="icon-btn menu-btn" id="menuButton"><i class="fa-solid fa-bars"></i> Menü</button>
-    </div>
+    <div class="actions"><button id="newGame">New</button><button class="primary" id="backHub">Hub</button></div>
   </div>
-
-  <div class="grid-container" id="gridContainer">
-    <div class="grid" id="grid"></div>
-  </div>
-
-  <!-- BOŞ ALT REKLAM BANNER (Advertica kodu buraya eklenecek) -->
-  <div class="bottom-banner" id="adBottomBanner"></div>
-</div>
-
-<!-- Game Over Modal -->
-<div class="modal-overlay" id="gameOverModal">
-  <div class="modal-card">
-    <h2>✨ Oyun Bitti</h2>
-    <button class="new-game-btn" id="newGameFromModal"><i class="fa-solid fa-rotate-right" style="margin-right: 8px;"></i>Yeni Oyun</button>
-  </div>
-</div>
-
-<script>
-  (function(){
-    "use strict";
-
-    // ---------- TELEGRAM ----------
+  <script>
     const tg = window.Telegram?.WebApp;
-    let haptic = null;
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      if (tg.HapticFeedback) haptic = tg.HapticFeedback;
-      if (tg.BackButton) {
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => { window.location.href = 'index.html'; });
+    tg?.ready();
+    tg?.BackButton?.show();
+
+    const N=4;
+    let board, score;
+    const grid = document.getElementById('grid');
+    const scoreEl = document.getElementById('score');
+    const bestEl = document.getElementById('best');
+    let best = Number(localStorage.getItem('vg_2048_best')||0);
+    bestEl.textContent = best;
+    const startAt = Date.now();
+
+    function sendSession(minutes){
+      try {
+        const initData = tg?.initData || '';
+        if (!initData || minutes < 1) return;
+        const payload = JSON.stringify({ initData, gameId:'2048', minutes, isAfk:false, isActive:true });
+        navigator.sendBeacon('/api/play-session', new Blob([payload], { type:'application/json' }));
+      } catch (_) {}
+    }
+
+    function closeToHub(){
+      const mins = Math.floor((Date.now() - startAt)/60000);
+      sendSession(mins);
+      window.location.href='/';
+    }
+    tg?.BackButton?.onClick(closeToHub);
+
+    function reset(){ board=Array.from({length:N},()=>Array(N).fill(0)); score=0; addRandom(); addRandom(); render(); }
+    function emptyCells(){ const arr=[]; for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(!board[r][c]) arr.push([r,c]); return arr; }
+    function addRandom(){ const e=emptyCells(); if(!e.length) return; const [r,c]=e[Math.floor(Math.random()*e.length)]; board[r][c]=Math.random()<0.9?2:4; }
+    function rotate(b){ const out=Array.from({length:N},()=>Array(N).fill(0)); for(let r=0;r<N;r++) for(let c=0;c<N;c++) out[c][N-1-r]=b[r][c]; return out; }
+    function slideLeft(b){
+      let moved=false, gained=0;
+      const out=b.map(row=>{
+        const vals=row.filter(Boolean); const merged=[];
+        for(let i=0;i<vals.length;i++){
+          if(vals[i] && vals[i]===vals[i+1]){ merged.push(vals[i]*2); gained += vals[i]*2; i++; moved=true; }
+          else merged.push(vals[i]);
+        }
+        while(merged.length<N) merged.push(0);
+        if(merged.join(',')!==row.join(',')) moved=true;
+        return merged;
+      });
+      return { out, moved, gained };
+    }
+    function move(dir){
+      let b=board.map(r=>[...r]);
+      if(dir===1){ b=rotate(b); }
+      if(dir===2){ b=rotate(rotate(b)); }
+      if(dir===3){ b=rotate(rotate(rotate(b))); }
+      const { out, moved, gained } = slideLeft(b);
+      if(!moved) return;
+      b=out;
+      if(dir===1){ b=rotate(rotate(rotate(b))); }
+      if(dir===2){ b=rotate(rotate(b)); }
+      if(dir===3){ b=rotate(b); }
+      board=b; score+=gained; if(score>best){ best=score; localStorage.setItem('vg_2048_best',best); }
+      addRandom(); render(); if(isGameOver()) alert('Game Over');
+    }
+    function isGameOver(){ if(emptyCells().length) return false; for(let r=0;r<N;r++) for(let c=0;c<N;c++){ const v=board[r][c]; if((board[r+1]?.[c]===v)||(board[r]?.[c+1]===v)) return false; } return true; }
+    function render(){
+      scoreEl.textContent=score; bestEl.textContent=best;
+      document.querySelectorAll('.tile').forEach(n=>n.remove());
+      const cs = grid.querySelectorAll('.cell');
+      const rect = cs[0].getBoundingClientRect();
+      const gap = (cs[1].getBoundingClientRect().left - rect.left - rect.width) || 10;
+      for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+        const v=board[r][c]; if(!v) continue;
+        const d=document.createElement('div'); d.className=`tile n${v}`; d.textContent=v;
+        d.style.width = rect.width+'px'; d.style.height=rect.height+'px';
+        d.style.left = (10 + c*(rect.width+gap))+'px'; d.style.top=(10 + r*(rect.height+gap))+'px';
+        grid.appendChild(d);
       }
     }
 
-    // ---------- SES (Web Audio) ----------
-    let soundEnabled = true;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    function playMoveSound() {
-      if (!soundEnabled) return;
-      const ctx = audioCtx;
-      if (ctx.state === 'suspended') ctx.resume();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start();
-      osc.stop(now + 0.07);
-    }
+    window.addEventListener('keydown',(e)=>{ if(e.key==='ArrowLeft')move(0); if(e.key==='ArrowUp')move(1); if(e.key==='ArrowRight')move(2); if(e.key==='ArrowDown')move(3); });
+    let sx=0,sy=0;
+    grid.addEventListener('touchstart',(e)=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+    grid.addEventListener('touchend',(e)=>{
+      const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+      if(Math.abs(dx)<20 && Math.abs(dy)<20) return;
+      if(Math.abs(dx)>Math.abs(dy)) move(dx>0?2:0); else move(dy>0?3:1);
+    },{passive:true});
 
-    function playMergeSound() {
-      if (!soundEnabled) return;
-      const ctx = audioCtx;
-      if (ctx.state === 'suspended') ctx.resume();
-      const now = ctx.currentTime;
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc1.type = 'triangle';
-      osc1.frequency.value = 660;
-      osc2.type = 'sine';
-      osc2.frequency.value = 990;
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-      osc1.start();
-      osc2.start();
-      osc1.stop(now + 0.12);
-      osc2.stop(now + 0.12);
-    }
-
-    const soundToggle = document.getElementById('soundToggle');
-    soundToggle.addEventListener('click', () => {
-      soundEnabled = !soundEnabled;
-      soundToggle.innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
-      if (soundEnabled && audioCtx.state === 'suspended') audioCtx.resume();
+    window.addEventListener('beforeunload', ()=>{
+      const mins = Math.floor((Date.now() - startAt)/60000);
+      sendSession(mins);
     });
 
-    // ---------- OYUN DURUMU ----------
-    let grid = [];
-    let score = 0;
-    let bestScore = 0;
-    let gameOverFlag = false;
-    const gridEl = document.getElementById('grid');
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const bestDisplay = document.getElementById('bestDisplay');
-    const gameOverModal = document.getElementById('gameOverModal');
-
-    // LocalStorage
-    try {
-      const saved = localStorage.getItem('2048_best');
-      if (saved) bestScore = parseInt(saved, 10) || 0;
-    } catch(e) {}
-    bestDisplay.textContent = bestScore;
-
-    function updateBest() {
-      if (score > bestScore) {
-        bestScore = score;
-        bestDisplay.textContent = bestScore;
-        try { localStorage.setItem('2048_best', bestScore); } catch(e) {}
-      }
-    }
-
-    function initGrid() {
-      grid = Array(4).fill().map(() => Array(4).fill(0));
-      score = 0;
-      gameOverFlag = false;
-      updateScore();
-      addRandomTile();
-      addRandomTile();
-      renderGrid();
-    }
-
-    function addRandomTile() {
-      const empty = [];
-      for (let r=0; r<4; r++) for (let c=0; c<4; c++) if (grid[r][c]===0) empty.push([r,c]);
-      if (empty.length === 0) return false;
-      const [r,c] = empty[Math.floor(Math.random()*empty.length)];
-      grid[r][c] = Math.random() < 0.9 ? 2 : 4;
-      return [r,c];
-    }
-
-    function renderGrid() {
-      gridEl.innerHTML = '';
-      for (let r=0; r<4; r++) {
-        for (let c=0; c<4; c++) {
-          const val = grid[r][c];
-          const tile = document.createElement('div');
-          tile.className = 'tile';
-          if (val > 0) {
-            tile.textContent = val;
-            tile.setAttribute('data-value', val);
-          } else {
-            tile.textContent = '';
-            tile.removeAttribute('data-value');
-          }
-          tile.dataset.row = r;
-          tile.dataset.col = c;
-          gridEl.appendChild(tile);
-        }
-      }
-    }
-
-    function updateScore() {
-      scoreDisplay.textContent = score;
-      updateBest();
-    }
-
-    function addMergeClass(row, col) {
-      const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
-      if (tile) {
-        tile.classList.add('tile-merged');
-        setTimeout(() => tile.classList.remove('tile-merged'), 200);
-      }
-    }
-
-    function addNewClass(row, col) {
-      const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
-      if (tile) {
-        tile.classList.add('tile-new');
-        setTimeout(() => tile.classList.remove('tile-new'), 180);
-      }
-    }
-
-    function move(direction) {
-      if (gameOverFlag) return false;
-      let moved = false;
-      const oldGrid = JSON.parse(JSON.stringify(grid));
-      let mergedPositions = [];
-
-      function rotateGrid(g, times) {
-        let gridCopy = g.map(r=>[...r]);
-        for (let t=0; t<times; t++) {
-          gridCopy = gridCopy[0].map((_, idx) => gridCopy.map(row => row[idx]).reverse());
-        }
-        return gridCopy;
-      }
-
-      let rotated;
-      if (direction === 'left') rotated = grid;
-      else if (direction === 'right') rotated = rotateGrid(grid, 2);
-      else if (direction === 'up') rotated = rotateGrid(grid, 3);
-      else if (direction === 'down') rotated = rotateGrid(grid, 1);
-      else return false;
-
-      for (let r=0; r<4; r++) {
-        let row = rotated[r].filter(v => v !== 0);
-        let newRow = [];
-        for (let i=0; i<row.length; i++) {
-          if (i < row.length-1 && row[i] === row[i+1]) {
-            const mergedVal = row[i]*2;
-            newRow.push(mergedVal);
-            score += mergedVal;
-            let originalRow = r, originalCol = newRow.length-1;
-            if (direction === 'right') originalCol = 3 - (newRow.length-1);
-            else if (direction === 'up') { originalRow = newRow.length-1; originalCol = r; }
-            else if (direction === 'down') { originalRow = 3 - (newRow.length-1); originalCol = r; }
-            mergedPositions.push([originalRow, originalCol]);
-            i++;
-          } else {
-            newRow.push(row[i]);
-          }
-        }
-        while (newRow.length < 4) newRow.push(0);
-        rotated[r] = newRow;
-      }
-
-      if (direction === 'right') grid = rotateGrid(rotated, 2);
-      else if (direction === 'up') grid = rotateGrid(rotated, 1);
-      else if (direction === 'down') grid = rotateGrid(rotated, 3);
-      else grid = rotated;
-
-      for (let r=0; r<4; r++) for (let c=0; c<4; c++) if (oldGrid[r][c] !== grid[r][c]) moved = true;
-
-      if (moved) {
-        if (haptic) haptic.impactOccurred('light');
-        playMoveSound();
-
-        const newPos = addRandomTile();
-        renderGrid();
-
-        mergedPositions.forEach(pos => {
-          addMergeClass(pos[0], pos[1]);
-          playMergeSound();
-        });
-
-        if (newPos) {
-          const [nr, nc] = newPos;
-          addNewClass(nr, nc);
-        }
-
-        updateScore();
-        if (isGameOver()) {
-          gameOverFlag = true;
-          gameOverModal.style.display = 'flex';
-          if (haptic) haptic.notificationOccurred('error');
-        }
-        return true;
-      }
-      return false;
-    }
-
-    function isGameOver() {
-      for (let r=0; r<4; r++) for (let c=0; c<4; c++) if (grid[r][c] === 0) return false;
-      for (let r=0; r<4; r++) for (let c=0; c<3; c++) if (grid[r][c] === grid[r][c+1]) return false;
-      for (let c=0; c<4; c++) for (let r=0; r<3; r++) if (grid[r][c] === grid[r+1][c]) return false;
-      return true;
-    }
-
-    function newGame() {
-      initGrid();
-      gameOverModal.style.display = 'none';
-      renderGrid();
-    }
-
-    // Kontroller
-    function handleKey(e) {
-      const key = e.key;
-      e.preventDefault();
-      if (key === 'ArrowUp') move('up');
-      else if (key === 'ArrowDown') move('down');
-      else if (key === 'ArrowLeft') move('left');
-      else if (key === 'ArrowRight') move('right');
-    }
-
-    let touchStart = null;
-    const gridContainer = document.getElementById('gridContainer');
-    gridContainer.addEventListener('touchstart', e => {
-      touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }, {passive: true});
-    gridContainer.addEventListener('touchend', e => {
-      if (!touchStart) return;
-      const dx = e.changedTouches[0].clientX - touchStart.x;
-      const dy = e.changedTouches[0].clientY - touchStart.y;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
-        move(dx > 0 ? 'right' : 'left');
-      } else if (Math.abs(dy) > 30) {
-        move(dy > 0 ? 'down' : 'up');
-      }
-      touchStart = null;
-    });
-
-    window.addEventListener('keydown', e => {
-      if (e.key.startsWith('Arrow')) {
-        e.preventDefault();
-        handleKey(e);
-      }
-    });
-
-    document.getElementById('restartButton').addEventListener('click', newGame);
-    document.getElementById('newGameFromModal').addEventListener('click', newGame);
-    document.getElementById('menuButton').addEventListener('click', () => {
-      window.location.href = 'index.html';
-    });
-
-    // Başlat
-    initGrid();
-    document.body.addEventListener('click', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, {once: true});
-
-    // ---------- REKLAM ALANI UYARISI (opsiyonel) ----------
-    // Üst ve alt banner'lar boş olup id'leri "adTopBanner" ve "adBottomBanner"dır.
-    // Advertica veya başka bir reklam scripti bu elementlerin içine reklam içeriğini yerleştirebilir.
-    console.log('Reklam alanları hazır. Advertica kodunu ilgili divlere ekleyebilirsiniz.');
-  })();
-</script>
+    document.getElementById('newGame').onclick=reset;
+    document.getElementById('backHub').onclick=closeToHub;
+    reset();
+  </script>
 </body>
 </html>
