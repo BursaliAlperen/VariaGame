@@ -313,6 +313,7 @@
     let lastActivity = Date.now();
     let activeGame = false;
     let sessionTimer = null;
+    let tgInitData = "";
 
     const state = {
       lang: localStorage.getItem('vg_lang') || 'en',
@@ -428,6 +429,7 @@
       const tg = window.Telegram && window.Telegram.WebApp;
       if (!tg) return;
       tg.ready(); tg.expand();
+      tgInitData = tg.initData || '';
       const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
       if (u){
         state.user.id = String(u.id);
@@ -441,13 +443,16 @@
           await saveUserRemote();
         } catch(e){ isLocalFallback = true; }
       }
-      const adminIds = (await (await fetch('/api/config')).json()).data.adminIds || [];
-      if (adminIds.includes(state.user.id)) document.getElementById('adminPanel').classList.remove('hidden');
+      try {
+        const meRes = await fetch('/api/me', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ initData: tgInitData }) });
+        const meJson = await meRes.json();
+        if (meJson?.data?.isAdmin) document.getElementById('adminPanel').classList.remove('hidden');
+      } catch (_) {}
     }
 
     async function fetchRefLink(){
       try {
-        const res = await fetch(`/api/user/ref-link?userId=${encodeURIComponent(state.user.id)}`);
+        const res = await fetch('/api/user/ref-link', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ initData: tgInitData }) });
         const j = await res.json();
         document.getElementById('refLink').value = j.data.link;
       } catch (_) {
@@ -473,7 +478,7 @@
           await fetch('/api/play-session', {
             method:'POST',
             headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify({ userId: state.user.id, gameId:'2048', minutes:60, isAfk:false, isActive:true })
+            body: JSON.stringify({ initData: tgInitData, gameId:'2048', minutes:60, isAfk:false, isActive:true })
           }).catch(()=>{});
           await saveUserRemote();
         }
@@ -528,12 +533,12 @@
       screen.classList.remove('hidden');
       vid.currentTime = 0;
       vid.play().catch(()=>{});
-      vid.onended = ()=>{ window.location.href = '/public/2048.html'; };
+      vid.onended = ()=>{ window.location.href = '/public/2048.html?from=hub'; };
     }
 
     async function adminLoadUsers(){
       try {
-        const res = await fetch(`/api/admin/users?adminId=${encodeURIComponent(state.user.id)}`);
+        const res = await fetch(`/api/admin/users?initData=${encodeURIComponent(tgInitData)}`);
         const j = await res.json();
         const list = document.getElementById('adminUsers');
         list.innerHTML = (j.data || []).slice(0,30).map((u)=>`<div class="glass" style="padding:6px">${u.userId || u.id} · bal: ${u.balance || 0}</div>`).join('') || 'No users';
@@ -548,7 +553,7 @@
       try {
         const res = await fetch('/api/admin/update-user', {
           method:'POST',headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ adminId: state.user.id, targetUserId, balance, level, notification:'Updated by admin panel' })
+          body: JSON.stringify({ initData: tgInitData, targetUserId, balance, level, notification:'Updated by admin panel' })
         });
         const j = await res.json();
         if (j.success) notify('User updated'); else notify('Update failed');

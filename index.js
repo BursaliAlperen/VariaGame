@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -12,7 +13,6 @@ const compression = require('compression');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const cron = require('node-cron');
-const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const { body, query, validationResult } = require('express-validator');
 
@@ -22,32 +22,72 @@ const APP_URL = process.env.APP_URL || 'https://variagame.onrender.com';
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map((id) => id.trim()).filter(Boolean);
 const DAILY_LIMIT_MINUTES = 240;
 const BASE_RATE = 0.001;
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN || '';
 
 let db = null;
 
-function safeJsonParse(value, fallback) {
-  try {
-    return JSON.parse(value);
-  } catch (_) {
-    return fallback;
-  }
-}
-
-function nowTs() {
-  return Date.now();
-}
-
 function validate(req, res, next) {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, errors: errors.array() });
-  }
+  if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
   return next();
 }
 
 function calcEarned(minutes) {
   const cycles = Math.floor(minutes / 60);
   return Number((cycles * BASE_RATE).toFixed(6));
+}
+
+function verifyTelegramData(initData = '') {
+  try {
+    if (!BOT_TOKEN || !initData) return false;
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    if (!hash) return false;
+
+    const pairs = [];
+    for (const [key, value] of params.entries()) {
+      if (key !== 'hash') pairs.push(`${key}=${value}`);
+    }
+    pairs.sort((a, b) => a.localeCompare(b));
+    const dataCheckString = pairs.join('\n');
+
+    const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+    const generated = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hash));
+  } catch (_) {
+    return false;
+  }
+}
+
+function parseTelegramUser(initData = '') {
+  const params = new URLSearchParams(initData);
+  const userRaw = params.get('user');
+  if (!userRaw) return null;
+  try {
+    const user = JSON.parse(userRaw);
+    return user?.id ? { ...user, id: String(user.id) } : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function requireTelegramAuth(req, res, next) {
+  const initData = req.body?.initData || req.query?.initData || req.headers['x-telegram-init-data'];
+  if (!verifyTelegramData(initData)) {
+    return res.status(401).json({ success: false, message: 'Invalid Telegram initData' });
+  }
+  const tgUser = parseTelegramUser(initData);
+  if (!tgUser) return res.status(401).json({ success: false, message: 'Invalid Telegram user payload' });
+  req.tgUser = tgUser;
+  req.initData = initData;
+  return next();
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.tgUser || !ADMIN_IDS.includes(req.tgUser.id)) {
+    return res.status(403).json({ success: false, message: 'Forbidden' });
+  }
+  return next();
 }
 
 try {
@@ -60,13 +100,10 @@ try {
       })
     });
     db = admin.firestore();
-    console.log('Firebase Admin initialized.');
-  } else {
-    console.warn('Firebase Admin not initialized. Backend will operate in limited mode.');
   }
 } catch (err) {
-  console.error('Firebase Admin init failed:', err.message);
   db = null;
+  console.error('Firebase init failed:', err.message);
 }
 
 async function ensureCollections() {
@@ -76,8 +113,7 @@ async function ensureCollections() {
     await db.collection(name).doc('_meta').set({ initializedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
   }
 }
-
-ensureCollections().catch((e) => console.error('Collection bootstrap failed:', e.message));
+ensureCollections().catch(() => {});
 
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(cors({ origin: (process.env.ALLOWED_ORIGINS || '').split(',').map((v) => v.trim()).filter(Boolean), credentials: true }));
@@ -85,19 +121,11 @@ app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
-app.use(session({
-  name: 'variagame.sid',
-  secret: process.env.SESSION_SECRET || 'dev-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 1000 * 60 * 60 * 8 }
-}));
+app.use(session({ name: 'variagame.sid', secret: process.env.SESSION_SECRET || 'dev-secret', resave: false, saveUninitialized: false }));
 app.use(mongoSanitize());
 app.use(hpp());
 app.use(xssClean());
-
 app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 150 }));
-app.use('/api/play-session', rateLimit({ windowMs: 5 * 60 * 1000, max: 30 }));
 
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
@@ -118,35 +146,43 @@ app.get('/api/config', (req, res) => {
       appUrl: APP_URL,
       botUsername: process.env.BOT_USERNAME || '',
       baseRate: BASE_RATE,
-      dailyLimitMinutes: DAILY_LIMIT_MINUTES,
-      adminIds: ADMIN_IDS
+      dailyLimitMinutes: DAILY_LIMIT_MINUTES
     }
   });
 });
 
-app.get('/api/user/ref-link', [
-  query('userId').isString().trim().isLength({ min: 1, max: 64 })
-], validate, async (req, res) => {
-  const { userId } = req.query;
+app.post('/api/me', requireTelegramAuth, async (req, res) => {
+  const id = req.tgUser.id;
+  let user = { userId: id, balance: 0, xp: 0, level: 1, todayPlayed: 0 };
+  if (db) {
+    const ref = db.collection('users').doc(id);
+    const snap = await ref.get();
+    if (snap.exists) user = { ...user, ...snap.data() };
+    await ref.set({ userId: id, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  }
+  return res.json({ success: true, data: { user, isAdmin: ADMIN_IDS.includes(id), tgUser: req.tgUser } });
+});
+
+app.post('/api/user/ref-link', [body('initData').isString().isLength({ min: 10 })], validate, requireTelegramAuth, async (req, res) => {
+  const userId = req.tgUser.id;
   const refCode = `V${Buffer.from(userId).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase()}`;
   const link = `https://t.me/${process.env.BOT_USERNAME || 'your_bot'}?start=${refCode}`;
-
   if (db) {
     await db.collection('referrals').doc(userId).set({ userId, refCode, link, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
   }
-
   return res.json({ success: true, data: { refCode, link } });
 });
 
 app.post('/api/referral/process', [
-  body('userId').isString().trim().isLength({ min: 1, max: 64 }),
+  body('initData').isString().isLength({ min: 10 }),
   body('refCode').isString().trim().isLength({ min: 3, max: 32 })
-], validate, async (req, res) => {
-  const { userId, refCode } = req.body;
+], validate, requireTelegramAuth, async (req, res) => {
+  const userId = req.tgUser.id;
+  const { refCode } = req.body;
   if (!db) return res.json({ success: true, data: { fallback: true } });
 
-  const existing = await db.collection('referrals').where('userId', '==', userId).limit(1).get();
-  if (!existing.empty) return res.json({ success: true, data: { processed: false, reason: 'already_processed' } });
+  const existing = await db.collection('referrals').doc(`${userId}_join`).get();
+  if (existing.exists) return res.json({ success: true, data: { processed: false, reason: 'already_processed' } });
 
   const ownerSnap = await db.collection('referrals').where('refCode', '==', refCode).limit(1).get();
   if (ownerSnap.empty) return res.json({ success: true, data: { processed: false, reason: 'invalid_code' } });
@@ -155,36 +191,25 @@ app.post('/api/referral/process', [
   if (owner.userId === userId) return res.json({ success: true, data: { processed: false, reason: 'self_referral' } });
 
   const batch = db.batch();
-  batch.set(db.collection('referrals').doc(`${userId}_join`), {
-    userId,
-    refCode,
-    sourceUserId: owner.userId,
-    createdAt: admin.firestore.FieldValue.serverTimestamp()
-  });
-  batch.set(db.collection('users').doc(owner.userId), {
-    balance: admin.firestore.FieldValue.increment(0.01),
-    referralCount: admin.firestore.FieldValue.increment(1)
-  }, { merge: true });
+  batch.set(db.collection('referrals').doc(`${userId}_join`), { userId, refCode, sourceUserId: owner.userId, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+  batch.set(db.collection('users').doc(owner.userId), { balance: admin.firestore.FieldValue.increment(0.01), referralCount: admin.firestore.FieldValue.increment(1) }, { merge: true });
   await batch.commit();
 
   return res.json({ success: true, data: { processed: true } });
 });
 
 app.post('/api/play-session', [
-  body('userId').isString().trim().isLength({ min: 1, max: 64 }),
+  body('initData').isString().isLength({ min: 10 }),
   body('gameId').isString().trim().isLength({ min: 1, max: 64 }),
   body('minutes').isInt({ min: 1, max: 240 }),
   body('isAfk').isBoolean(),
   body('isActive').isBoolean()
-], validate, async (req, res) => {
-  const { userId, gameId, minutes, isAfk, isActive } = req.body;
-  if (isAfk || !isActive) {
-    return res.json({ success: true, data: { earned: 0, reason: 'inactive_or_afk' } });
-  }
+], validate, requireTelegramAuth, async (req, res) => {
+  const userId = req.tgUser.id;
+  const { gameId, minutes, isAfk, isActive } = req.body;
+  if (isAfk || !isActive) return res.json({ success: true, data: { earned: 0, reason: 'inactive_or_afk' } });
 
-  if (!db) {
-    return res.json({ success: true, data: { earned: calcEarned(minutes), fallback: true } });
-  }
+  if (!db) return res.json({ success: true, data: { earned: calcEarned(minutes), fallback: true } });
 
   const userRef = db.collection('users').doc(userId);
   const userSnap = await userRef.get();
@@ -202,7 +227,7 @@ app.post('/api/play-session', [
     todayPlayed: admin.firestore.FieldValue.increment(allowed),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
-  batch.set(db.collection('playSessions').doc(`${userId}_${nowTs()}`), {
+  batch.set(db.collection('playSessions').doc(`${userId}_${Date.now()}`), {
     userId,
     gameId,
     minutes: allowed,
@@ -216,27 +241,20 @@ app.post('/api/play-session', [
   return res.json({ success: true, data: { earned, minutesCounted: allowed, dailyLimit: DAILY_LIMIT_MINUTES } });
 });
 
-app.get('/api/admin/users', [
-  query('adminId').isString().trim().isLength({ min: 1, max: 64 })
-], validate, async (req, res) => {
-  const { adminId } = req.query;
-  if (!ADMIN_IDS.includes(adminId)) return res.status(403).json({ success: false, message: 'Forbidden' });
+app.get('/api/admin/users', [query('initData').isString().isLength({ min: 10 })], validate, requireTelegramAuth, requireAdmin, async (req, res) => {
   if (!db) return res.json({ success: true, data: [] });
-
   const snap = await db.collection('users').limit(200).get();
-  const users = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  return res.json({ success: true, data: users });
+  return res.json({ success: true, data: snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) });
 });
 
 app.post('/api/admin/update-user', [
-  body('adminId').isString().trim().isLength({ min: 1, max: 64 }),
+  body('initData').isString().isLength({ min: 10 }),
   body('targetUserId').isString().trim().isLength({ min: 1, max: 64 }),
   body('balance').optional().isFloat({ min: 0 }),
   body('level').optional().isInt({ min: 1, max: 999 }),
   body('notification').optional().isString().trim().isLength({ min: 1, max: 160 })
-], validate, async (req, res) => {
-  const { adminId, targetUserId, balance, level, notification } = req.body;
-  if (!ADMIN_IDS.includes(adminId)) return res.status(403).json({ success: false, message: 'Forbidden' });
+], validate, requireTelegramAuth, requireAdmin, async (req, res) => {
+  const { targetUserId, balance, level, notification } = req.body;
   if (!db) return res.json({ success: true, data: { fallback: true } });
 
   const payload = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
@@ -248,34 +266,18 @@ app.post('/api/admin/update-user', [
   return res.json({ success: true, data: { updated: true } });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, uptime: process.uptime(), timestamp: new Date().toISOString() });
-});
+app.get('/api/health', (req, res) => res.json({ success: true, uptime: process.uptime(), timestamp: new Date().toISOString() }));
 
 cron.schedule('*/10 * * * *', async () => {
-  try {
-    await fetch(`${APP_URL}/api/health`, { timeout: 5000 });
-    console.log('Keep-alive ping sent:', new Date().toISOString());
-  } catch (err) {
-    console.warn('Keep-alive ping failed:', err.message);
-  }
+  try { await fetch(`${APP_URL}/api/health`); } catch (_) {}
 });
 
 cron.schedule('0 0 * * *', async () => {
   if (!db) return;
-  try {
-    const snap = await db.collection('users').get();
-    const batch = db.batch();
-    snap.docs.forEach((doc) => {
-      batch.set(doc.ref, { todayPlayed: 0 }, { merge: true });
-    });
-    await batch.commit();
-    console.log('Daily reset completed at 00:00 server time.');
-  } catch (err) {
-    console.error('Daily reset failed:', err.message);
-  }
-});
+  const snap = await db.collection('users').get();
+  const batch = db.batch();
+  snap.docs.forEach((doc) => batch.set(doc.ref, { todayPlayed: 0 }, { merge: true }));
+  await batch.commit();
+}, { timezone: 'UTC' });
 
-app.listen(PORT, () => {
-  console.log(`VariaGame server listening on ${PORT}`);
-});
+app.listen(PORT, () => console.log(`VariaGame server listening on ${PORT}`));
