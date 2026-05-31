@@ -18,7 +18,7 @@ const PORT = Number(process.env.PORT || 3000);
 const APP_URL = process.env.APP_URL || 'https://variagame.onrender.com';
 const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim()).filter(Boolean);
 const DAILY_LIMIT_MINUTES = 240;
-const BASE_RATE = 0.001;
+const BASE_RATE = 0.001; // Reklam/İzleme başına veya dakikalık temel kazanç oranı
 
 // ========== Firebase Admin Başlat ==========
 let db = null;
@@ -32,13 +32,19 @@ try {
             })
         });
         db = admin.firestore();
-        console.log('Firebase Admin başlatıldı.');
+        console.log('🔥 Firebase Admin başarıyla başlatıldı.');
     } else {
-        console.warn('Firebase Admin başlatılamadı. Backend sınırlı modda.');
+        console.warn('⚠️ Firebase Admin başlatılamadı. Backend sınırlı modda (Fallback aktif).');
     }
 } catch (err) {
-    console.error('Firebase Admin hatası:', err.message);
+    console.error('❌ Firebase Admin bağlantı hatası:', err.message);
 }
+
+// ========== Hata Yakalama Middleware (Async Handler) ==========
+// Express 4 asenkron rotalardaki hataları otomatik yakalayamaz. Sunucunun çökmesini engeller.
+const asyncHandler = fn => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
 
 // ========== Telegram InitData Doğrulama ==========
 function verifyTelegramInitData(initData) {
@@ -46,18 +52,22 @@ function verifyTelegramInitData(initData) {
     const botToken = process.env.BOT_TOKEN;
     if (!botToken) return false;
 
-    const secret = crypto.createHash('sha256').update(botToken).digest();
-    const params = new URLSearchParams(initData);
-    const hash = params.get('hash');
-    params.delete('hash');
+    try {
+        const secret = crypto.createHash('sha256').update(botToken).digest();
+        const params = new URLSearchParams(initData);
+        const hash = params.get('hash');
+        params.delete('hash');
 
-    const dataCheckString = Array.from(params.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, v]) => `${k}=${v}`)
-        .join('\n');
+        const dataCheckString = Array.from(params.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, v]) => `${k}=${v}`)
+            .join('\n');
 
-    const hmac = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
-    return hmac === hash;
+        const hmac = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
+        return hmac === hash;
+    } catch (err) {
+        return false;
+    }
 }
 
 function extractUserIdFromInitData(initData) {
@@ -72,7 +82,16 @@ function extractUserIdFromInitData(initData) {
     }
 }
 
-// ========== Middleware ==========
+// ========== Express Validator Hata Kontrolü Middleware ==========
+const validateRequest = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    next();
+};
+
+// ========== Middleware Yapılandırması ==========
 app.use(helmet({
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
@@ -86,6 +105,7 @@ app.use(helmet({
         }
     }
 }));
+
 app.use(cors({ origin: APP_URL, credentials: true }));
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
@@ -96,18 +116,16 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 1000 * 60 * 60 * 8 }
+    cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 8 }
 }));
 
-// Rate limiting
-const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 150 });
+// Global Hız Sınırlayıcılar
+const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: { success: false, error: 'Too many requests.' } });
 app.use('/api/', apiLimiter);
-app.use('/api/play-session', rateLimit({ windowMs: 5 * 60 * 1000, max: 30 }));
 
 // ========== Yardımcı Fonksiyonlar ==========
 function calcEarned(minutes) {
-    const cycles = Math.floor(minutes / 60);
-    return Number((cycles * BASE_RATE).toFixed(6));
+    return Number((minutes * BASE_RATE).toFixed(6));
 }
 
 async function ensureUserExists(userId, userName = 'Player') {
@@ -121,10 +139,10 @@ async function ensureUserExists(userId, userName = 'Player') {
             balance: 0,
             level: 1,
             xp: 0,
-            todayPlayed: 0,
+            todayPlayed: 0, // Günlük izleme/oyun süresi sayacı
             totalEarned: 0,
             totalMinutes: 0,
-            gamesPlayed: 0,
+            gamesPlayed: 0, // Toplam tamamlanan görev/etkinlik sayısı
             referralCount: 0,
             referralEarnings: 0,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -138,7 +156,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // ========== API Endpoint'leri ==========
 
-// Config (client için güvenli bilgiler)
+// Config (Frontend için güvenli parametreler)
 app.get('/api/config', (req, res) => {
     res.json({
         success: true,
@@ -149,8 +167,7 @@ app.get('/api/config', (req, res) => {
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
                 messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-                appId: process.env.FIREBASE_APP_ID,
-                measurementId: process.env.FIREBASE_MEASUREMENT_ID
+                appId: process.env.FIREBASE_APP_ID
             },
             appUrl: APP_URL,
             botUsername: process.env.BOT_USERNAME,
@@ -160,10 +177,11 @@ app.get('/api/config', (req, res) => {
     });
 });
 
-// Kullanıcı verisi getir
+// Kullanıcı verilerini getir (Geliştirilmiş Admin Kontrolü)
 app.get('/api/user', [
-    query('initData').isString().notEmpty()
-], async (req, res) => {
+    query('initData').isString().notEmpty(),
+    validateRequest
+], asyncHandler(async (req, res) => {
     const { initData } = req.query;
     if (!verifyTelegramInitData(initData)) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -172,20 +190,24 @@ app.get('/api/user', [
     if (!userId) return res.status(400).json({ success: false, error: 'Invalid user' });
 
     if (!db) {
-        return res.json({ success: true, data: { userId, fallback: true } });
+        return res.json({ success: true, data: { userId, fallback: true, isAdmin: ADMIN_IDS.includes(userId) } });
     }
 
     await ensureUserExists(userId);
     const doc = await db.collection('users').doc(userId).get();
     const userData = doc.data();
+    
+    // Güvenlik: isAdmin değeri tamamen backend'de kontrol edilir ve inject edilir
     userData.isAdmin = ADMIN_IDS.includes(userId);
+    
     res.json({ success: true, data: userData });
-});
+}));
 
-// Referans linki oluştur
+// Referans linki üret
 app.get('/api/user/ref-link', [
-    query('initData').isString().notEmpty()
-], async (req, res) => {
+    query('initData').isString().notEmpty(),
+    validateRequest
+], asyncHandler(async (req, res) => {
     const { initData } = req.query;
     if (!verifyTelegramInitData(initData)) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -202,15 +224,16 @@ app.get('/api/user/ref-link', [
         }, { merge: true });
     }
     res.json({ success: true, data: { refCode, link } });
-});
+}));
 
-// Oyun oturumu bildir (her dakika veya oyun sonu)
+// Watch-to-Earn & Oturum Ödüllendirme Sistemi (W2E Uyumlu)
 app.post('/api/play-session', [
     body('initData').isString().notEmpty(),
     body('gameId').isString().trim().isLength({ min: 1, max: 64 }),
     body('minutes').isInt({ min: 1, max: 240 }),
-    body('isActive').isBoolean()
-], async (req, res) => {
+    body('isActive').isBoolean(),
+    validateRequest
+], asyncHandler(async (req, res) => {
     const { initData, gameId, minutes, isActive } = req.body;
     if (!verifyTelegramInitData(initData)) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -257,7 +280,7 @@ app.post('/api/play-session', [
 
     await batch.commit();
 
-    // Seviye atlama kontrolü
+    // Seviye atlama algoritması
     const newXp = (user.xp || 0) + allowed * 5;
     let newLevel = user.level || 1;
     let xpForNext = 500 * Math.pow(1.1, newLevel - 1);
@@ -270,13 +293,54 @@ app.post('/api/play-session', [
     }
 
     res.json({ success: true, data: { earned, minutesCounted: allowed } });
-});
+}));
 
-// Referans işleme (bot tarafından çağrılır veya deep link ile)
+// W2E Özel: Video Reklam İzleme Tetikleme / Tamamlama Endpoint'i
+app.post('/api/watch-complete', [
+    body('initData').isString().notEmpty(),
+    body('adProvider').isString().optional(),
+    validateRequest
+], asyncHandler(async (req, res) => {
+    const { initData, adProvider = 'RichAds' } = req.body;
+    if (!verifyTelegramInitData(initData)) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    const userId = extractUserIdFromInitData(initData);
+    if (!userId) return res.status(400).json({ success: false, error: 'Invalid user' });
+
+    if (!db) return res.json({ success: true, data: { earned: BASE_RATE, fallback: true } });
+
+    await ensureUserExists(userId);
+    const userRef = db.collection('users').doc(userId);
+    
+    // Reklam başına sabit TON ödülü (Örn: BASE_RATE veya belirlediğin bir değer)
+    const adReward = BASE_RATE; 
+
+    await userRef.update({
+        balance: admin.firestore.FieldValue.increment(adReward),
+        totalEarned: admin.firestore.FieldValue.increment(adReward),
+        xp: admin.firestore.FieldValue.increment(10), // Video başına +10 XP
+        gamesPlayed: admin.firestore.FieldValue.increment(1), // Görev sayacını artır
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // İzleme log kaydı
+    await db.collection('adLogs').add({
+        userId,
+        provider: adProvider,
+        reward: adReward,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.json({ success: true, data: { earned: adReward } });
+}));
+
+// Referans İşleme Modülü
 app.post('/api/referral/process', [
     body('initData').isString().notEmpty(),
-    body('refCode').isString().trim().isLength({ min: 3, max: 32 })
-], async (req, res) => {
+    body('refCode').isString().trim().isLength({ min: 3, max: 32 }),
+    validateRequest
+], asyncHandler(async (req, res) => {
     const { initData, refCode } = req.body;
     if (!verifyTelegramInitData(initData)) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -286,60 +350,73 @@ app.post('/api/referral/process', [
 
     if (!db) return res.json({ success: true, data: { fallback: true } });
 
-    // Referans kodundan sahibi bul
     const refSnap = await db.collection('referrals').where('refCode', '==', refCode).limit(1).get();
-    if (refSnap.empty) return res.json({ success: false, error: 'Invalid ref code' });
-    const ownerId = refSnap.docs[0].id;
-    if (ownerId === userId) return res.json({ success: false, error: 'Self referral' });
+    if (refSnap.empty) return res.status(400).json({ success: false, error: 'Invalid ref code' });
+    
+    const ownerId = refSnap.docs[0].data().userId;
+    if (ownerId === userId) return res.status(400).json({ success: false, error: 'Self referral' });
 
-    // Daha önce işlenmiş mi?
-    const processedSnap = await db.collection('referrals').doc(`${userId}_joined`).get();
+    const processedSnap = await db.collection('referrals_joined').doc(`${userId}_joined`).get();
     if (processedSnap.exists) return res.json({ success: true, data: { alreadyProcessed: true } });
 
     const batch = db.batch();
-    batch.set(db.collection('referrals').doc(`${userId}_joined`), {
+    batch.set(db.collection('referrals_joined').doc(`${userId}_joined`), {
         userId, refCode, sourceUserId: ownerId, createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
+    
+    // Referans getirene 0.15 TON ödül yansıtma
     batch.update(db.collection('users').doc(ownerId), {
         balance: admin.firestore.FieldValue.increment(0.15),
         referralEarnings: admin.firestore.FieldValue.increment(0.15),
         referralCount: admin.firestore.FieldValue.increment(1)
     });
+    
     await batch.commit();
     res.json({ success: true, data: { processed: true } });
-});
+}));
 
-// Admin: Kullanıcı listesi
+// ========== Admin Paneli API Endpoint'leri ==========
+
+// Admin: Kullanıcı listesi (Strictly Protected)
 app.get('/api/admin/users', [
-    query('initData').isString().notEmpty()
-], async (req, res) => {
+    query('initData').isString().notEmpty(),
+    validateRequest
+], asyncHandler(async (req, res) => {
     const { initData } = req.query;
     if (!verifyTelegramInitData(initData)) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
     const userId = extractUserIdFromInitData(initData);
-    if (!ADMIN_IDS.includes(userId)) return res.status(403).json({ success: false, error: 'Forbidden' });
+    
+    // Korumalı Alan: Sadece listedeki admin ID'sine sahip olan görebilir
+    if (!ADMIN_IDS.includes(userId)) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Admin access required.' });
+    }
 
     if (!db) return res.json({ success: true, data: [] });
-    const snap = await db.collection('users').limit(100).get();
+    const snap = await db.collection('users').limit(200).get();
     const users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json({ success: true, data: users });
-});
+}));
 
-// Admin: Kullanıcı güncelle
+// Admin: Kullanıcı güncelle (Strictly Protected)
 app.post('/api/admin/update-user', [
     body('initData').isString().notEmpty(),
     body('targetUserId').isString().trim().notEmpty(),
     body('balance').optional().isFloat({ min: 0 }),
     body('level').optional().isInt({ min: 1 }),
-    body('notification').optional().isString()
-], async (req, res) => {
+    body('notification').optional().isString(),
+    validateRequest
+], asyncHandler(async (req, res) => {
     const { initData, targetUserId, balance, level, notification } = req.body;
     if (!verifyTelegramInitData(initData)) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
     const adminId = extractUserIdFromInitData(initData);
-    if (!ADMIN_IDS.includes(adminId)) return res.status(403).json({ success: false, error: 'Forbidden' });
+    
+    if (!ADMIN_IDS.includes(adminId)) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Admin access required.' });
+    }
 
     if (!db) return res.json({ success: true, data: { fallback: true } });
     const updateData = {};
@@ -350,22 +427,52 @@ app.post('/api/admin/update-user', [
 
     await db.collection('users').doc(targetUserId).update(updateData);
     res.json({ success: true });
-});
+}));
 
 app.get('/api/health', (req, res) => res.json({ success: true, timestamp: new Date().toISOString() }));
 
-// ========== Cron Jobs ==========
+// Global Hata Yakalama Sınırı (Uygulamanın çökmesini tamamen engeller)
+app.use((err, req, res, next) => {
+    console.error('💥 Sunucu İçi Hata Hatası:', err.stack);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+});
+
+// ========== Cron Jobs (Zamanlanmış Görevler) ==========
+
+// Canlı tutma pingi
 cron.schedule('*/10 * * * *', () => {
     fetch(`${APP_URL}/api/health`).catch(() => {});
 });
 
+// GÜVENLİ GÜNLÜK LİMİT SIFIRLAMA (Firestore Batch Limitine Uyumlu)
 cron.schedule('0 0 * * *', async () => {
     if (!db) return;
-    const snap = await db.collection('users').get();
-    const batch = db.batch();
-    snap.docs.forEach(doc => batch.update(doc.ref, { todayPlayed: 0 }));
-    await batch.commit();
-    console.log('Günlük limit sıfırlandı.');
+    try {
+        console.log('🔄 Günlük limit sıfırlama işlemi başlatıldı...');
+        const snap = await db.collection('users').get();
+        
+        let batch = db.batch();
+        let counter = 0;
+
+        for (const doc of snap.docs) {
+            batch.update(doc.ref, { todayPlayed: 0 });
+            counter++;
+
+            // Firestore tek batch işleminde maksimum 500 dokümana izin verir!
+            if (counter === 500) {
+                await batch.commit();
+                batch = db.batch();
+                counter = 0;
+            }
+        }
+
+        if (counter > 0) {
+            await batch.commit();
+        }
+        console.log('✅ Tüm kullanıcıların günlük limitleri başarıyla sıfırlandı.');
+    } catch (err) {
+        console.error('❌ Cron limit sıfırlama hatası:', err.message);
+    }
 });
 
-app.listen(PORT, () => console.log(`Server ${PORT} portunda çalışıyor`));
+app.listen(PORT, () => console.log(`🚀 Server ${PORT} portunda AAA kalitede çalışıyor.`));
